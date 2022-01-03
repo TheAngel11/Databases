@@ -349,7 +349,8 @@ CSV HEADER;
 
 -- NOW MIGRATE THE DATA --
 
--- insert into sand the data from the auxiliary table (sand_aux, quest_arena)
+-- Sand
+-- Insert into sand the data from the auxiliary table (sand_aux, quest_arena)
 DELETE FROM sand WHERE sand.id_title LIKE '%'; -- bypass warning
 INSERT INTO sand(id_title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 SELECT name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
@@ -357,10 +358,12 @@ FROM sand_aux, quest_arena
 WHERE quest_arena.arena_id = sand_aux.id
 GROUP BY name;
 
--- insert into season the data from the old database (season_aux)
+-- Season
+-- Insert into season the data from the old database (season_aux)
 INSERT INTO season(id_name, start_date, end_date)
 SELECT name, startDate, endDate FROM season_aux;
 
+-- Success
 -- Explanation: the name has to be unique, so that's the reason we are using GROUP BY statement.
 -- For the gems, each success has the same gems, so make the average will not be a problem.
 INSERT INTO success(id_title, gems_reward)
@@ -368,9 +371,11 @@ SELECT name, AVG(gems)
 FROM player_achievement
 GROUP BY name;
 
+-- Gets
 -- Union of the tables: player - gets - success
 INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement AS pa;
 
+-- Mission
 -- mission(id_mission(PK), task_description)
 INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
 
@@ -399,6 +404,6 @@ INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_
 -- That is made by the GROUP BY statement.
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge GROUP BY name, img;
 
--- Frees.
+-- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
