@@ -209,7 +209,7 @@ CREATE TABLE player_quest (
 	quest_description VARCHAR(100),
 	quest_requirement VARCHAR(100),
 	quest_depends INTEGER,
-	unlock VARCHAR(100)
+	unlock DATE
 );
 COPY player_quest
 FROM '/Users/Shared/BBDD/players_quests.csv'
