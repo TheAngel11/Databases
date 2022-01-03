@@ -392,3 +392,10 @@ INSERT INTO badge (id_title, image_path) SELECT name, img FROM player_badge GROU
 -- Frees.
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 INSERT INTO frees (id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
+
+-- Accepts
+-- Explanation: a player can accept a mission, so this table is the union/relation of the missions that a player has accepted.
+-- We have another problem. We don't know if that mission is completed in order to unlock another ones.
+-- We have the "unlock" field but is a date. So in order to not to store empty data in the completed field, I have filled in those missions that
+-- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
+INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest;
