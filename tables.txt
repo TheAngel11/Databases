@@ -31,11 +31,11 @@
 🚀 *accepts(id_mission(PK/FK), id_player(PK/FK), is_completed)
 🚀 mission(id_mission(PK), task_description)
 🚀 depends(id_mission_1(PK/FK), id_mission_2(PK/FK))
-🚀 *frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))
+🚀 frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))
 
 😎 player(id_player(PK), name, exp, trophies, gold, gems)
 ✅ message(id_message(PK), title, issue, datetime, id_owner(PK), id_clan(FK), id_replier(FK))
-🚀 *credit_card(id_credit_card(PK), datetime, number)
+🚀 credit_card(id_credit_card(PK), datetime, number)
 ✅ shop(id_shop_name(PK), available_gems)
 ✅ article(id_article(PK), name, real_price, times_purchasable, id_shop_name(FK))
 ✅ reward(id_reward(PK), trophies_needed)
