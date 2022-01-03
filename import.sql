@@ -346,3 +346,35 @@ CREATE TABLE technology_aux(
 COPY technology_aux FROM '/Users/Shared/BBDD/technologies.csv'
 DELIMITER ','
 CSV HEADER;
+
+-- NOW MIGRATE THE DATA --
+
+-- insert into sand the data from the auxiliary table (sand_aux, quest_arena)
+DELETE FROM sand WHERE sand.id_title LIKE '%'; -- bypass warning
+INSERT INTO sand(id_title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
+SELECT name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
+FROM sand_aux, quest_arena
+WHERE quest_arena.arena_id = sand_aux.id
+GROUP BY name;
+
+-- insert into season the data from the old database (season_aux)
+INSERT INTO season(id_name, start_date, end_date)
+SELECT name, startDate, endDate FROM season_aux;
+
+-- Explanation: the name has to be unique, so that's the reason we are using GROUP BY statement.
+-- For the gems, each success has the same gems, so make the average will not be a problem.
+INSERT INTO success(id_title, gems_reward)
+SELECT name, AVG(gems)
+FROM player_achievement
+GROUP BY name;
+
+-- Union of the tables: player - gets - success
+INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement AS pa;
+
+-- mission(id_mission(PK), task_description)
+INSERT INTO mission (id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
+
+-- A mission can depend on another one
+INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest;
+
+INSERT INTO battle (datetime, duration, points, trophies_played, gold_played) SELECT ba.date, ba.duration, ba.points, ba.trophies, ba.gold FROM battle_aux AS ba;
