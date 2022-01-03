@@ -372,30 +372,33 @@ GROUP BY name;
 INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement AS pa;
 
 -- mission(id_mission(PK), task_description)
-INSERT INTO mission (id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
+INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
 
--- A mission can depend on another one
+-- Depends
+-- A mission CAN depend on another one
+-- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
+-- See more here: https://bit.ly/3zoaHCL
 INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest;
+
+-- Accepts
+-- Explanation: a player can accept a mission, so this table is the union/relation of the missions that a player has accepted.
+-- We have another problem. We don't know if that mission is completed in order to unlock another ones.
+-- We have the "unlock" field but is a date. So in order to not to store empty data in the "completed" field, I have filled in those missions that
+-- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
+INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest;
 
 -- Credit Card
 -- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
 -- The date, as I have supposed, is the expiration date of the card, but that field is not in the importation data, so I have filled it with the purchase date.
 -- Is not a good way to do so, but the field is there and we have to fill out with any value. We can not store empty data. Fault of us.
-INSERT INTO credit_card (datetime, number) SELECT  date, credit_card FROM player_purchases;
+INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
 -- So we will need to extract the unique badges from the player_badge table and insert them in the badge table.
 -- That is made by the GROUP BY statement.
-INSERT INTO badge (id_title, image_path) SELECT name, img FROM player_badge GROUP BY name, img;
+INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge GROUP BY name, img;
 
 -- Frees.
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
-INSERT INTO frees (id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
-
--- Accepts
--- Explanation: a player can accept a mission, so this table is the union/relation of the missions that a player has accepted.
--- We have another problem. We don't know if that mission is completed in order to unlock another ones.
--- We have the "unlock" field but is a date. So in order to not to store empty data in the completed field, I have filled in those missions that
--- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
-INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest;
+INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
