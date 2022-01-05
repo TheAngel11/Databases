@@ -76,21 +76,21 @@ FROM '/Users/Shared/BBDD/cards.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS clan_battle;
-CREATE TABLE clan_battle(
+DROP TABLE IF EXISTS clan_battle_aux;
+CREATE TABLE clan_battle_aux(
 	battle INTEGER,
 	clan VARCHAR(100),
 	start_date DATE,
 	end_date DATE
 );
 
-COPY clan_battle (battle,clan,start_date,end_date)
+COPY clan_battle_aux (battle,clan,start_date,end_date)
 FROM '/Users/Shared/BBDD/clan_battles.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS clan_tech_structure;
-CREATE TABLE clan_tech_structure(
+DROP TABLE IF EXISTS clan_tech_structure_aux;
+CREATE TABLE clan_tech_structure_aux(
 	clan VARCHAR(100),
 	tech VARCHAR(100),
 	structure VARCHAR(100),
@@ -98,7 +98,7 @@ CREATE TABLE clan_tech_structure(
 	level INTEGER
 );
 
-COPY clan_tech_structure (clan,tech,structure,date,level)
+COPY clan_tech_structure_aux (clan,tech,structure,date,level)
 FROM '/Users/Shared/BBDD/clan_tech_structures.csv'
 DELIMITER ','
 CSV HEADER;
@@ -129,8 +129,8 @@ FROM '/Users/Shared/BBDD/friends.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS message_players;
-CREATE TABLE message_players(
+DROP TABLE IF EXISTS message_players_aux;
+CREATE TABLE message_players_aux(
 	id INTEGER,
 	sender VARCHAR(100),
 	receiver VARCHAR(100),
@@ -140,13 +140,13 @@ CREATE TABLE message_players(
 
 );
 
-COPY message_players (id,sender,receiver,text,date,answer)
+COPY message_players_aux (id,sender,receiver,text,date,answer)
 FROM '/Users/Shared/BBDD/messages_between_players.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS message_clans;
-CREATE TABLE message_clans(
+DROP TABLE IF EXISTS message_clans_aux;
+CREATE TABLE message_clans_aux(
 	id INTEGER,
 	sender VARCHAR(100),
 	receiver VARCHAR(100),
@@ -156,13 +156,13 @@ CREATE TABLE message_clans(
 
 );
 
-COPY message_clans (id,sender,receiver,text,date,answer)
+COPY message_clans_aux (id,sender,receiver,text,date,answer)
 FROM '/Users/Shared/BBDD/messages_to_clans.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_purchases;
-CREATE TABLE player_purchases(
+DROP TABLE IF EXISTS player_purchases_aux;
+CREATE TABLE player_purchases_aux(
 	player VARCHAR(100),
 	credit_card BIGINT,
 	buy_id INTEGER,
@@ -182,7 +182,7 @@ CREATE TABLE player_purchases(
 	emote_path VARCHAR(255)
 );
 
-COPY player_purchases (player,credit_card,buy_id,buy_name,buy_cost,buy_stock,date,discount,arenapack_id,chest_name,chest_rarity,chest_unlock_time,chest_num_cards,bundle_gold,bundle_gems,emote_name,emote_path)
+COPY player_purchases_aux (player,credit_card,buy_id,buy_name,buy_cost,buy_stock,date,discount,arenapack_id,chest_name,chest_rarity,chest_unlock_time,chest_num_cards,bundle_gold,bundle_gems,emote_name,emote_path)
 FROM '/Users/Shared/BBDD/player_purchases.csv'
 DELIMITER ','
 CSV HEADER;
@@ -201,8 +201,8 @@ FROM '/Users/Shared/BBDD/players.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_quest;
-CREATE TABLE player_quest (
+DROP TABLE IF EXISTS player_quest_aux;
+CREATE TABLE player_quest_aux (
 	player_tag VARCHAR(100),
 	quest_id INTEGER,
 	quest_title VARCHAR(100),
@@ -211,13 +211,13 @@ CREATE TABLE player_quest (
 	quest_depends INTEGER,
 	unlock DATE
 );
-COPY player_quest
+COPY player_quest_aux
 FROM '/Users/Shared/BBDD/players_quests.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_achievement;
-CREATE TABLE player_achievement(
+DROP TABLE IF EXISTS player_achievement_aux;
+CREATE TABLE player_achievement_aux(
 	player VARCHAR(100),
 	"name" VARCHAR(100),
 	description VARCHAR(255),
@@ -225,26 +225,26 @@ CREATE TABLE player_achievement(
 	"date" DATE,
 	gems INTEGER
 );
-COPY player_achievement
+COPY player_achievement_aux
 FROM '/Users/Shared/BBDD/playersachievements.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_badge;
-CREATE TABLE player_badge(
+DROP TABLE IF EXISTS player_badge_aux;
+CREATE TABLE player_badge_aux(
 	player VARCHAR(100),
 	"name" VARCHAR(100),
 	arena INTEGER,
 	"date" DATE,
 	img VARCHAR(100)
 );
-COPY player_badge
+COPY player_badge_aux
 FROM '/Users/Shared/BBDD/playersbadge.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_card;
-CREATE TABLE player_card(
+DROP TABLE IF EXISTS player_card_aux;
+CREATE TABLE player_card_aux(
 	player VARCHAR(100),
 	"id" INTEGER,
 	"name" VARCHAR(100),
@@ -252,37 +252,37 @@ CREATE TABLE player_card(
 	amount INTEGER,
 	"date" DATE
 );
-COPY player_card
+COPY player_card_aux
 FROM '/Users/Shared/BBDD/playerscards.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_clan;
-CREATE TABLE player_clan(
+DROP TABLE IF EXISTS player_clan_aux;
+CREATE TABLE player_clan_aux(
 	player VARCHAR(100),
 	clan VARCHAR(100),
 	"role" VARCHAR(300),
 	"date" DATE
 );
-COPY player_clan
+COPY player_clan_aux
 FROM '/Users/Shared/BBDD/playersClans.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_clan_donation;
-CREATE TABLE player_clan_donation(
+DROP TABLE IF EXISTS player_clan_donation_aux;
+CREATE TABLE player_clan_donation_aux(
 	player VARCHAR(100),
 	clan VARCHAR(100),
 	gold INTEGER,
 	"date" DATE
 );
-COPY player_clan_donation
+COPY player_clan_donation_aux
 FROM '/Users/Shared/BBDD/playersClansdonations.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS player_deck;
-CREATE TABLE player_deck(
+DROP TABLE IF EXISTS player_deck_aux;
+CREATE TABLE player_deck_aux(
 	player VARCHAR(100),
 	deck INTEGER,
 	title VARCHAR(100),
@@ -291,19 +291,19 @@ CREATE TABLE player_deck(
 	card INTEGER,
 	"level" INTEGER
 );
-COPY player_deck
+COPY player_deck_aux
 FROM '/Users/Shared/BBDD/playersdeck.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS quest_arena;
-CREATE TABLE quest_arena(
+DROP TABLE IF EXISTS quest_arena_aux;
+CREATE TABLE quest_arena_aux(
 	quest_id INTEGER,
 	arena_id INTEGER,
 	gold INTEGER,
 	experience INTEGER
 );
-COPY quest_arena
+COPY quest_arena_aux
 FROM '/Users/Shared/BBDD/quests_arenas.csv'
 DELIMITER ','
 CSV HEADER;
@@ -319,19 +319,19 @@ FROM '/Users/Shared/BBDD/seasons.csv'
 DELIMITER ','
 CSV HEADER;
 
-DROP TABLE IF EXISTS shared_deck;
-CREATE TABLE shared_deck(
+DROP TABLE IF EXISTS shared_deck_aux;
+CREATE TABLE shared_deck_aux(
 	deck INTEGER,
 	player VARCHAR(100)
 );
-COPY shared_deck
+COPY shared_deck_aux
 FROM '/Users/Shared/BBDD/shared_decks.csv'
 DELIMITER ','
 CSV HEADER;
 
 DROP TABLE IF EXISTS technology_aux;
 CREATE TABLE technology_aux(
-	techonology VARCHAR(100),
+	technology VARCHAR(100),
 	"cost" INTEGER,
 	max_level INTEGER,
 	prerequisite VARCHAR(100),
@@ -354,8 +354,8 @@ CSV HEADER;
 DELETE FROM sand WHERE sand.id_title LIKE '%'; -- bypass warning
 INSERT INTO sand(id_title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 SELECT name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
-FROM sand_aux, quest_arena
-WHERE quest_arena.arena_id = sand_aux.id
+FROM sand_aux, quest_arena_aux
+WHERE quest_arena_aux.arena_id = sand_aux.id
 GROUP BY name;
 
 -- Season
@@ -370,25 +370,25 @@ SELECT name, startDate, endDate FROM season_aux;
 DELETE FROM success;
 INSERT INTO success(id_title, gems_reward)
 SELECT name, AVG(gems)
-FROM player_achievement
+FROM player_achievement_aux
 GROUP BY name;
 
 -- Gets
 -- Union of the tables: player - gets - success
 DELETE FROM gets;
-INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement AS pa;
+INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement_aux AS pa;
 
 -- Mission
 -- mission(id_mission(PK), task_description)
 DELETE FROM mission;
-INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
+INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest_aux GROUP BY quest_id, quest_requirement;
 
 -- Depends
 -- A mission CAN depend on another one
 -- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
 -- See more here: https://bit.ly/3zoaHCL
 DELETE FROM depends;
-INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest;
+INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest_aux;
 
 -- Accepts
 -- Explanation: a player can accept a mission, so this table is the union/relation of the missions that a player has accepted.
@@ -396,23 +396,23 @@ INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_
 -- We have the "unlock" field but is a date. So in order to not to store empty data in the "completed" field, I have filled in those missions that
 -- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
 DELETE FROM accepts;
-INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest;
+INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest_aux;
 
 -- Credit Card
 -- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
 -- The date, as I have supposed, is the expiration date of the card, but that field is not in the importation data, so I have filled it with the purchase date.
 -- Is not a good way to do so, but the field is there and we have to fill out with any value. We can not store empty data. Fault of us.
 DELETE FROM credit_card;
-INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases;
+INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases_aux;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
 -- So we will need to extract the unique badges from the player_badge table and insert them in the badge table.
 -- That is made by the GROUP BY statement.
 DELETE FROM badge;
-INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge GROUP BY name, img;
+INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 DELETE FROM frees;
-INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
+INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
