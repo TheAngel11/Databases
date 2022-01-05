@@ -360,12 +360,14 @@ GROUP BY name;
 
 -- Season
 -- Insert into season the data from the old database (season_aux)
+DELETE FROM season;
 INSERT INTO season(id_name, start_date, end_date)
 SELECT name, startDate, endDate FROM season_aux;
 
 -- Success
 -- Explanation: the name has to be unique, so that's the reason we are using GROUP BY statement.
 -- For the gems, each success has the same gems, so make the average will not be a problem.
+DELETE FROM success;
 INSERT INTO success(id_title, gems_reward)
 SELECT name, AVG(gems)
 FROM player_achievement
@@ -373,16 +375,19 @@ GROUP BY name;
 
 -- Gets
 -- Union of the tables: player - gets - success
+DELETE FROM gets;
 INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement AS pa;
 
 -- Mission
 -- mission(id_mission(PK), task_description)
+DELETE FROM mission;
 INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest GROUP BY quest_id, quest_requirement;
 
 -- Depends
 -- A mission CAN depend on another one
 -- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
 -- See more here: https://bit.ly/3zoaHCL
+DELETE FROM depends;
 INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest;
 
 -- Accepts
@@ -390,20 +395,24 @@ INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_
 -- We have another problem. We don't know if that mission is completed in order to unlock another ones.
 -- We have the "unlock" field but is a date. So in order to not to store empty data in the "completed" field, I have filled in those missions that
 -- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
+DELETE FROM accepts;
 INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest;
 
 -- Credit Card
 -- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
 -- The date, as I have supposed, is the expiration date of the card, but that field is not in the importation data, so I have filled it with the purchase date.
 -- Is not a good way to do so, but the field is there and we have to fill out with any value. We can not store empty data. Fault of us.
+DELETE FROM credit_card;
 INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
 -- So we will need to extract the unique badges from the player_badge table and insert them in the badge table.
 -- That is made by the GROUP BY statement.
+DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge GROUP BY name, img;
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
+DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge AS pa;
