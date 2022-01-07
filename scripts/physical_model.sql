@@ -241,62 +241,68 @@ CREATE TABLE win (
     PRIMARY KEY (id_clan, id_battle, id_title)
 );
 
--- create table structure -> structure(id_structure(FK), num_min_trophy)
-DROP TABLE IF EXISTS structure CASCADE;
-CREATE TABLE structure (
-    id_structure SERIAL PRIMARY KEY,
-    num_min_trophy INTEGER NOT NULL
-);
-
--- create table technology -> technology(id_technology(FK), max_level, actual_level)
-DROP TABLE IF EXISTS technology CASCADE;
-CREATE TABLE technology (
-    id_technology SERIAL PRIMARY KEY,
-    max_level INTEGER NOT NULL,
-    actual_level INTEGER NOT NULL
-);
-
--- create table need -> need(id_structure1(PK/FK), id_structure2(PK/FK))
-DROP TABLE IF EXISTS need CASCADE;
-CREATE TABLE need (
-    id_structure1 INTEGER NOT NULL,
-    id_structure2 INTEGER NOT NULL,
-    FOREIGN KEY (id_structure1) REFERENCES structure (id_structure),
-    FOREIGN KEY (id_structure2) REFERENCES structure (id_structure),
-    PRIMARY KEY (id_structure1, id_structure2)
-);
-
--- create table requires -> requires(id_technology1(PK/FK), id_technology2(PK/FK), previous_level)
-DROP TABLE IF EXISTS requires CASCADE;
-CREATE TABLE requires (
-    id_technology1 INTEGER NOT NULL,
-    id_technology2 INTEGER NOT NULL,
-    previous_level INTEGER NOT NULL,
-    FOREIGN KEY (id_technology1) REFERENCES technology (id_technology),
-    FOREIGN KEY (id_technology2) REFERENCES technology (id_technology),
-    PRIMARY KEY (id_technology1, id_technology2)
-);
-
--- create table modifier -> modifier(id_modifier(PK), name, description, cost)
+-- create table modifier -> modifier(name_modifier(PK),description, cost, damage, attack_speed, effect_radius, spawn_damage, life)
 DROP TABLE IF EXISTS modifier CASCADE;
 CREATE TABLE modifier (
-    id_modifier SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name_modifier VARCHAR(100) PRIMARY KEY,
     description VARCHAR(255) NOT NULL,
-    cost INTEGER NOT NULL
+    cost INTEGER NOT NULL,
+	damage INTEGER,
+	attack_speed INTEGER,
+	effect_radius INTEGER,
+	spawn_damage INTEGER,
+	life INTEGER	
 );
+-- create table structure -> structure(name_structure(FK), num_min_trophy)
+DROP TABLE IF EXISTS structure CASCADE;
+CREATE TABLE structure (
+    name_structure VARCHAR(100) PRIMARY KEY,
+    num_min_trophy INTEGER NOT NULL,
+	FOREIGN KEY (name_structure) REFERENCES modifier (name_modifier)
+);
+
+-- create table technology -> technology(name_technology(FK), max_level, actual_level)
+DROP TABLE IF EXISTS technology CASCADE;
+CREATE TABLE technology (
+    name_technology VARCHAR(100) PRIMARY KEY,
+    max_level INTEGER NOT NULL,
+    actual_level INTEGER,
+	FOREIGN KEY (name_technology) REFERENCES modifier (name_modifier)	
+);
+
+-- create table need -> need(id_structure(PK/FK), pre_structure(PK/FK))
+DROP TABLE IF EXISTS need CASCADE;
+CREATE TABLE need (
+    id_structure VARCHAR(100) NOT NULL,
+    pre_structure VARCHAR(100),
+    FOREIGN KEY (id_structure) REFERENCES structure (name_structure),
+    FOREIGN KEY (pre_structure) REFERENCES structure (name_structure),
+    PRIMARY KEY (id_structure,pre_structure)
+);
+
+-- create table requires -> requires(id_technology(PK/FK), pre_technology(PK/FK), previous_level)
+DROP TABLE IF EXISTS requires CASCADE;
+CREATE TABLE requires (
+    id_technology VARCHAR(100) NOT NULL,
+    pre_technology VARCHAR(100) NOT NULL,
+    previous_level INTEGER NOT NULL,
+    FOREIGN KEY (id_technology) REFERENCES technology (name_technology),
+    FOREIGN KEY (pre_technology) REFERENCES technology (name_technology),
+    PRIMARY KEY (id_technology, pre_technology)
+);
+
 
 -- create table modify -> modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
 DROP TABLE IF EXISTS modify CASCADE;
 CREATE TABLE modify (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(255) NOT NULL,
     card_name VARCHAR(255) NOT NULL,
-    id_modifier INTEGER NOT NULL,
-    amount_donations INTEGER NOT NULL,
+    name_modifier VARCHAR(100) NOT NULL,
+    amount_donations INTEGER,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (card_name) REFERENCES card (id_card_name),
-    FOREIGN KEY (id_modifier) REFERENCES modifier (id_modifier),
-    PRIMARY KEY (id_clan, card_name, id_modifier)
+    FOREIGN KEY (name_modifier) REFERENCES modifier (name_modifier),
+    PRIMARY KEY (id_clan, card_name, name_modifier)
 );
 
 -- create table joins -> joins(id_clan(PK/FK), id_player(PK/FK), id_role(PK/FK), datetime_in, datetime_out)
