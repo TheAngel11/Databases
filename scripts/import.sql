@@ -416,3 +416,74 @@ INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux G
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
+
+--Imports MAR
+
+-- Clan
+-- Nota: no ha ninguna tabla auxiliar de creación de clan
+INSERT INTO clan(id_clan,description, num_min_trophy, total_points, num_trophy)
+SELECT ca.tag, ca.description,ca.requiredTrophies,ca.score,ca.trophies FROM clan_aux AS ca;
+
+-- Role
+-- ID de SERIAL 
+INSERT INTO role(description) 
+SELECT DISTINCT "role" FROM player_clan_aux;
+
+-- Join
+INSERT INTO joins(id_clan, id_player, id_role, datetime_in)
+SELECT pa.clan,pa.player, ro.id_role, pa."date" FROM player_clan_aux AS pa, role AS ro
+WHERE ro.description = pa."role";
+
+-- Give
+INSERT INTO give(id_clan, id_player, gold, "date")
+SELECT pd.clan, pd.player, pd.gold, pd."date" FROM player_clan_donation_aux AS pd;
+
+-- Battle
+INSERT INTO battle (datetime, duration, points) SELECT ba.date, ba.duration, ba.winner_score FROM battle_aux AS ba;
+
+-- Fight
+INSERT INTO fight(id_clan,id_battle)
+SELECT clan, battle FROM clan_battle_aux;
+
+-- Win
+-- Nota: falta la insignia (badge)
+INSERT INTO win(id_clan,id_battle)
+SELECT clan, battle FROM clan_battle_aux;
+
+-- Modifier
+-- Nota: cambios en la creación de tabla
+INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
+SELECT bu.building, bu.description, bu.cost, bu.mod_damage, bu.mod_hit_speed, bu.mod_radius, bu.mod_spawn_damage, bu.mod_lifetime FROM building_aux AS bu;
+
+INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
+SELECT te.techonology, te.description, te.cost, te.mod_damage, te.mod_hit_speed, te.mod_radius, te.mod_spawn_damage, te.mod_lifetime  FROM technologyCSV AS te;
+
+-- Structure
+-- Nota: cambios en la creación de tabla
+INSERT INTO structure(id_structure, num_min_trophy)
+SELECT bu.building, bu.trophies FROM buildingsCSV AS bu;
+
+-- Technology
+-- Nota: cambios en la creación de tabla
+INSERT INTO technology(name_technology, max_level)
+SELECT te.techonology, te.max_level FROM technologyCSV AS te;
+
+-- Need (structure)
+-- Nota: cambios en la creación de tabla
+INSERT INTO need(id_structure, pre_structure)
+SELECT bu.building, bu.prerequisite FROM building_aux AS bu
+WHERE bu.prerequisite is not null;
+
+
+--Requires (technology)
+-- Nota: cambios en la creación de tabla
+INSERT INTO requires(id_technology, pre_technology, previous_level)
+SELECT te.techonology, te.prerequisite, te.prereq_level FROM technology_aux AS te
+WHERE te.prerequisite is not null;
+
+-- Modify
+-- Nota: cambios en la creación de tabla
+-- Nota 2: falta el id de carta
+INSERT INTO modify(id_clan, name_modifier)
+SELECT cst.clan, CASE WHEN cst.tech is not null THEN cst.tech ELSE cst.structure END
+FROM clan_tech_structure_aux AS cst;
