@@ -337,10 +337,10 @@ CREATE TABLE technology_aux(
 	prerequisite VARCHAR(100),
 	prereq_level INTEGER,
 	mod_damage INTEGER,
-	mod_hit_speed VARCHAR(100),
+	mod_hit_speed INTEGER,
 	mod_radius INTEGER,
-	mod_spawn_damage VARCHAR(100),
-	mod_lifetime VARCHAR(100),
+	mod_spawn_damage INTEGER,
+	mod_lifetime INTEGER,
 	description VARCHAR(500)
 );
 COPY technology_aux FROM '/Users/Shared/BBDD/technologies.csv'
@@ -453,13 +453,8 @@ WHERE ro.name = pa."role";
 -- Give
 -- ERROR (NO COMPILA) -> ERROR: column "date" of relation "give" does not exist
 DELETE FROM give;
-INSERT INTO give(id_clan, id_player, gold, "date")
-SELECT pd.clan, pd.player, pd.gold, pd."date" FROM player_clan_donation_aux AS pd;
-
--- Battle
--- ERROR (NO COMPILA) -> ERROR: column "duration" is of type integer but expression is of type time without time zone
-DELETE FROM battle;
-INSERT INTO battle (datetime, duration, points) SELECT ba.date, ba.duration, ba.winner_score FROM battle_aux AS ba;
+INSERT INTO give(id_clan, id_player, gold)
+SELECT pd.clan, pd.player, pd.gold FROM player_clan_donation_aux AS pd;
 
 -- Fight
 -- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
