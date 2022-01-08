@@ -6,7 +6,8 @@ CREATE TABLE player (
     exp INTEGER NOT NULL,
     trophies INTEGER NOT NULL,
     gold INTEGER NOT NULL,
-    gems INTEGER NOT NULL
+    gems INTEGER NOT NULL,
+    cardnumber BIGINT NOT NULL,
 );
 
 -- Create table sand -> sand(id_title(PK), max_trophies, min_trophies, reward_in_exp, reward_in_gold)
@@ -77,6 +78,7 @@ CREATE TABLE role (
 DROP TABLE IF EXISTS clan CASCADE;
 CREATE TABLE clan (
     id_clan VARCHAR(100) PRIMARY KEY,
+    clan_name VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
     num_trophy INTEGER NOT NULL,
     num_min_trophy INTEGER NOT NULL,
