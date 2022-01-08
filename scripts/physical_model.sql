@@ -70,13 +70,13 @@ CREATE TABLE enchantment (
 DROP TABLE IF EXISTS role CASCADE;
 CREATE TABLE role (
     id_role SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    description VARCHAR(255) NOT NULL
 );
 
 -- create table clan -> clan(id_clan(PK), description, num_trophy, num_min_trophy, total_points, id_player(FK), gold_needed, datetime)
 DROP TABLE IF EXISTS clan CASCADE;
 CREATE TABLE clan (
-    id_clan SERIAL PRIMARY KEY,
+    id_clan VARCHAR(100) PRIMARY KEY,
     description VARCHAR(255) NOT NULL,
     num_trophy INTEGER NOT NULL,
     num_min_trophy INTEGER NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE complete (
 -- create table fight -> fight(id_clan(PK/FK), id_battle(PK/FK))
 DROP TABLE IF EXISTS fight CASCADE;
 CREATE TABLE fight (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(100) NOT NULL,
     id_battle INTEGER NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
@@ -232,7 +232,7 @@ CREATE TABLE badge (
 -- create table win -> win(id_clan(PK/FK), id_battle(PK/FK), id_title(PK/FK))
 DROP TABLE IF EXISTS win CASCADE;
 CREATE TABLE win (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(100) NOT NULL,
     id_battle INTEGER NOT NULL,
     id_title VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
@@ -295,7 +295,7 @@ CREATE TABLE requires (
 -- create table modify -> modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
 DROP TABLE IF EXISTS modify CASCADE;
 CREATE TABLE modify (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(100) NOT NULL,
     card_name VARCHAR(255) NOT NULL,
     name_modifier VARCHAR(100) NOT NULL,
     amount_donations INTEGER,
@@ -308,7 +308,7 @@ CREATE TABLE modify (
 -- create table joins -> joins(id_clan(PK/FK), id_player(PK/FK), id_role(PK/FK), datetime_in, datetime_out)
 DROP TABLE IF EXISTS joins CASCADE;
 CREATE TABLE joins (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(100) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
     id_role INTEGER NOT NULL,
     datetime_in TIMESTAMP NOT NULL,
@@ -322,7 +322,7 @@ CREATE TABLE joins (
 -- create table give -> give(id_clan(PK/FK), id_player(PK/FK), gold, experience)
 DROP TABLE IF EXISTS give CASCADE;
 CREATE TABLE give (
-    id_clan INTEGER NOT NULL,
+    id_clan VARCHAR(100) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
     gold INTEGER NOT NULL,
     experience INTEGER NOT NULL,
@@ -370,7 +370,7 @@ CREATE TABLE friend (
 -- create table bundle -> bundle(id_bundle(PK), gold_contained, gems_contained)
 DROP TABLE IF EXISTS bundle CASCADE;
 CREATE TABLE bundle (
-    id_bundle PRIMARY KEY,
+    id_bundle INTEGER PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
     FOREIGN KEY (id_bundle) REFERENCES article(id_article)
@@ -379,7 +379,7 @@ CREATE TABLE bundle (
 -- create table emoticon -> emoticon(id_emoticon(PK), path)
 DROP TABLE IF EXISTS emoticon CASCADE;
 CREATE TABLE emoticon (
-    id_emoticon PRIMARY KEY,
+    id_emoticon INTEGER PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL
     path VARCHAR(255) NOT NULL
     FOREIGN KEY (id_emoticon) REFERENCES article(id_article)
@@ -388,7 +388,7 @@ CREATE TABLE emoticon (
 -- create table chest -> chest(id_chest(PK), gold_contained, gems_contained, unlocking_time)
 DROP TABLE IF EXISTS chest CASCADE;
 CREATE TABLE chest (
-    id_chest PRIMARY KEY,
+    id_chest INTEGER PRIMARY KEY,
     rarity VARCHAR(255) NOT NULL,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
@@ -447,7 +447,7 @@ CREATE TABLE is_found (
 -- create table sand_pack -> sand_pack(id_sand_pack(PK), gold_contained, gems_contained, sand(FK))
 DROP TABLE IF EXISTS sand_pack CASCADE;
 CREATE TABLE sand_pack (
-    id_sand_pack PRIMARY KEY,
+    id_sand_pack INTEGER PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
     id_sand VARCHAR(255) NOT NULL,
