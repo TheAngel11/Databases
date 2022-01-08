@@ -6,14 +6,14 @@ CREATE TABLE player (
     exp INTEGER NOT NULL,
     trophies INTEGER NOT NULL,
     gold INTEGER NOT NULL,
-    gems INTEGER NOT NULL,
-    cardnumber BIGINT NOT NULL,
+    gems INTEGER NOT NULL
 );
 
 -- Create table sand -> sand(id_title(PK), max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 DROP TABLE IF EXISTS sand CASCADE;
 CREATE TABLE sand (
-    id_title VARCHAR(255) PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
+    title VARCHAR(255),
     max_trophies INTEGER NOT NULL,
     min_trophies INTEGER NOT NULL,
     reward_in_exp INTEGER NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE enchantment (
 DROP TABLE IF EXISTS role CASCADE;
 CREATE TABLE role (
     id_role SERIAL PRIMARY KEY,
-    description VARCHAR(255) NOT NULL
+    description VARCHAR(300) NOT NULL
 );
 
 -- create table clan -> clan(id_clan(PK), description, num_trophy, num_min_trophy, total_points, id_player(FK), gold_needed, datetime)
@@ -103,9 +103,9 @@ CREATE TABLE card (
     damage INTEGER NOT NULL,
     attack_speed INTEGER NOT NULL,
     rarity VARCHAR(255) NOT NULL,
-    sand VARCHAR(255) NOT NULL,
+    sand INTEGER NOT NULL,
     FOREIGN KEY (rarity) REFERENCES rarity (degree),
-    FOREIGN KEY (sand) REFERENCES sand (id_title)
+    FOREIGN KEY (sand) REFERENCES sand (id)
 );
 
 -- create table level -> level(level(PK), statistics_multiplier, improvement_cost)
@@ -122,7 +122,7 @@ CREATE TABLE stack (
     id_stack SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     creation_date DATE NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    description VARCHAR(1000) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_player) REFERENCES player (id_player)
 );
@@ -202,14 +202,14 @@ DROP TABLE IF EXISTS complete CASCADE;
 CREATE TABLE complete (
     id_battle INTEGER NOT NULL,
     id_player VARCHAR(255) NOT NULL,
-    id_sand VARCHAR(255) NOT NULL,
+    id_sand INTEGER NOT NULL,
     victories_count INTEGER NOT NULL,
     defeat_count INTEGER NOT NULL,
     points_count INTEGER NOT NULL,
     season VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    FOREIGN KEY (id_sand) REFERENCES sand (id_title),
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (season) REFERENCES season (id_name),
     PRIMARY KEY (id_battle, id_player, id_sand)
 );
@@ -382,8 +382,8 @@ CREATE TABLE bundle (
 DROP TABLE IF EXISTS emoticon CASCADE;
 CREATE TABLE emoticon (
     id_emoticon INTEGER PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL
-    path VARCHAR(255) NOT NULL
+    "name" VARCHAR(255) NOT NULL,
+    "path" VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_emoticon) REFERENCES article(id_article)
 );
 
@@ -452,8 +452,8 @@ CREATE TABLE sand_pack (
     id_sand_pack INTEGER PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
-    id_sand VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id_sand) REFERENCES sand (id_title),
+    id_sand INTEGER NOT NULL,
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (id_sand_pack) REFERENCES article (id_article)
 );
 
@@ -477,9 +477,9 @@ DROP TABLE IF EXISTS frees CASCADE;
 CREATE TABLE frees (
     id_badge VARCHAR(255) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
-    id_sand VARCHAR(255) NOT NULL,
+    id_sand INTEGER NOT NULL,
     FOREIGN KEY (id_badge) REFERENCES badge (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    FOREIGN KEY (id_sand) REFERENCES sand (id_title),
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
     PRIMARY KEY (id_badge, id_player)
 );

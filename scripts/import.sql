@@ -351,12 +351,12 @@ CSV HEADER;
 
 -- Sand
 -- Insert into sand the data from the auxiliary table (sand_aux, quest_arena)
-DELETE FROM sand WHERE sand.id_title LIKE '%'; -- bypass warning
-INSERT INTO sand(id_title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
-SELECT name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
+DELETE FROM sand; -- bypass warning
+INSERT INTO sand(id, title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
+SELECT sand_aux.id, name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
 FROM sand_aux, quest_arena_aux
 WHERE quest_arena_aux.arena_id = sand_aux.id
-GROUP BY name;
+GROUP BY id, name;
 
 -- Season
 -- Insert into season the data from the old database (season_aux)
@@ -421,11 +421,87 @@ INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.ar
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
 DELETE FROM battle;
 INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int FROM battle_aux;
-SELECT * FROM battle;
 
 -- Complete
 -- Explanation: this is the most complex table.
 -- INSERT INTO complete(id_battle, id_player, id_sand, victories_count, defeat_count, points_count, season) SELECT battle, player, sand FROM battle, player, sand WHERE battle.id_battle = player.id_player AND battle.id_battle = sand.id_title;
+
+-- Imports Angel
+-- PLAYER
+DELETE FROM player;
+INSERT INTO player(id_player, name, exp, trophies, gold, gems)
+SELECT  tag, name, experience, trophies, random() * (10000 - 25 + 1) + 25, random() * (10000 - 25 + 1) + 25 FROM player_aux;
+
+-- RARITY
+DELETE FROM rarity;
+INSERT INTO rarity(degree, multiplicative_factor)
+SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux GROUP BY rarity;
+
+-- CARD
+DELETE FROM card;
+INSERT INTO card(id_card_name, damage, attack_speed, rarity, sand)
+SELECT name, damage, hit_speed, rarity, arena FROM card_aux;
+
+-- BUILDING
+DELETE FROM building;
+INSERT INTO building (building_name, life)
+SELECT name, lifetime FROM card_aux AS card
+WHERE card.lifetime IS NOT NULL;
+
+-- TROOP
+DELETE FROM troop;
+INSERT INTO troop (troop_name, spawn_damage)
+SELECT name, spawn_damage FROM card_aux AS card
+WHERE card.spawn_damage IS NOT NULL;
+
+-- ENCHANTMENT
+DELETE FROM enchantment;
+INSERT INTO enchantment (enchantment_name, effect_radius)
+SELECT name, radious FROM card_aux AS card
+WHERE card.radious IS NOT NULL;
+
+-- LEVEL
+INSERT INTO level(level, statistics_multiplier, improvement_cost)
+SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 25 FROM player_card GROUP BY level;
+
+-- STACK
+INSERT INTO stack(id_stack, name, creation_date, description, id_player)
+SELECT  deck, title, date, description, player FROM player_deck GROUP BY deck, title, date, description, player;
+
+/*
+ - GROUP
+--INSERT INTO group(card_name, id_stack)
+--SELECT ... FROM ...;
+ */
+
+-- Imports Arnau
+
+-- Shop
+INSERT INTO shop(id_shop_name, available_gems)
+VALUES ('SHOP', random() * (10000 - 25 + 1) + 25);
+
+-- Article
+-- INSERT INTO article(name, real_price, times_purchasable)
+-- SELECT pp.pp.buy_cost/pp.buy_stock, pp.buy_stock
+-- FROM player_purchases_aux AS pp;
+
+/*INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
+SELECT (a.id_article, pp.bundle_gold, pp.bundle_gems)
+FROM player_purchases_aux AS pp
+JOIN article AS a ON a.times_purchasable = pp.buy_stock
+WHERE pp.bundle_gold > 0 OR pp.bundle_gems > 0;*/
+
+/*INSERT INTO emoticon(id_emoticon, emoticon_name, "path")
+SELECT (a.id_article, pp.emote_name, pp.emote_path)
+FROM player_purchases_aux AS pp
+JOIN article AS a ON a.times_purchasable = pp.buy_stock
+WHERE pp.emote_path != null;
+
+INSERT INTO chest(id_chest, rarity, unlocking_time)
+SELECT (a.id_article, pp.chest_rarity, pp.chest_unlock_time)
+FROM player_purchases_aux AS pp
+JOIN article AS a ON a.times_purchasable = pp.buy_stock
+WHERE pp.chest_rarity != null;*/
 
 --Imports MAR
 
@@ -440,7 +516,7 @@ SELECT ca.tag, ca.description,ca.requiredTrophies,ca.score,ca.trophies FROM clan
 -- ID de SERIAL
 -- ERROR (NO COMPILA) -> ERROR: value too long for type character varying(255)
 DELETE FROM role;
-INSERT INTO role(name)
+INSERT INTO role(description)
 SELECT DISTINCT "role" FROM player_clan_aux;
 
 -- Join
