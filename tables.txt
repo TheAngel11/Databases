@@ -12,7 +12,7 @@
 😈 give(id_clan(PK/FK), id_player(PK/FK), gold, experience)
 😈 role(id_role(PK), description)
 😈 joins(id_clan(PK/FK), id_player(PK/FK), id_role(PK/FK), datetime_in, datetime_out)
-🚀 *battle(id_battle(PK), datetime, duration, points, trophies_played, gold_played)
+🚀 battle(id_battle(PK), datetime, duration, points, trophies_played, gold_played)
 😈 fight(id_clan(PK/FK), id_battle(PK/FK))
 😈 badge(id_title(PK), image_path)
 😈 win(id_clan(PK/FK), id_battle(PK/FK), id_title(PK/FK))
@@ -24,11 +24,11 @@
 😈 modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
 
 🚀 sand(id_title(PK), max_trophies, min_trophies, reward_in_exp, reward_in_gold)
-🚀 *compete(id_battle(PK/FK), id_player(PK/FK), id_sand(PK/FK), victories_count, defeat_count, points_count, season(FK))
+🚀 *complete(id_battle(PK/FK), id_player(PK/FK), id_sand(PK/FK), victories_count, defeat_count, points_count, season(FK))
 🚀 season(id_name(PK), start_date, end_date)id
 🚀 gets(id_success(PK/FK), id_player(PK/FK))
 🚀 success(id_title(PK), gems_reward)
-🚀 *accepts(id_mission(PK/FK), id_player(PK/FK), is_completed)
+🚀 accepts(id_mission(PK/FK), id_player(PK/FK), is_completed)
 🚀 mission(id_mission(PK), task_description)
 🚀 depends(id_mission_1(PK/FK), id_mission_2(PK/FK))
 🚀 frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))
