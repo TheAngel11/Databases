@@ -295,7 +295,7 @@ CREATE TABLE requires (
 -- create table modify -> modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
 DROP TABLE IF EXISTS modify CASCADE;
 CREATE TABLE modify (
-    id_clan VARCHAR(255) NOT NULL,
+    id_clan INTEGER NOT NULL,
     card_name VARCHAR(255) NOT NULL,
     name_modifier VARCHAR(100) NOT NULL,
     amount_donations INTEGER,
