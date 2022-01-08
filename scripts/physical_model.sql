@@ -90,7 +90,7 @@ CREATE TABLE clan (
 -- create table rarity -> rarity(degree(PK), multiplicative_factor)
 DROP TABLE IF EXISTS rarity CASCADE;
 CREATE TABLE rarity (
-    degree INTEGER PRIMARY KEY,
+    degree VARCHAR(255) PRIMARY KEY,
     multiplicative_factor FLOAT NOT NULL
 );
 
@@ -100,7 +100,7 @@ CREATE TABLE card (
     id_card_name VARCHAR(255) PRIMARY KEY,
     damage INTEGER NOT NULL,
     attack_speed INTEGER NOT NULL,
-    rarity INTEGER NOT NULL,
+    rarity VARCHAR(255) NOT NULL,
     sand VARCHAR(255) NOT NULL,
     FOREIGN KEY (rarity) REFERENCES rarity (degree),
     FOREIGN KEY (sand) REFERENCES sand (id_title)
@@ -370,25 +370,31 @@ CREATE TABLE friend (
 -- create table bundle -> bundle(id_bundle(PK), gold_contained, gems_contained)
 DROP TABLE IF EXISTS bundle CASCADE;
 CREATE TABLE bundle (
-    id_bundle SERIAL PRIMARY KEY,
+    id_bundle PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
-    gems_contained INTEGER NOT NULL
+    gems_contained INTEGER NOT NULL,
+    FOREIGN KEY (id_bundle) REFERENCES article(id_article)
 );
 
 -- create table emoticon -> emoticon(id_emoticon(PK), path)
 DROP TABLE IF EXISTS emoticon CASCADE;
 CREATE TABLE emoticon (
-    id_emoticon SERIAL PRIMARY KEY,
+    id_emoticon PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL
     path VARCHAR(255) NOT NULL
+    FOREIGN KEY (id_emoticon) REFERENCES article(id_article)
 );
 
 -- create table chest -> chest(id_chest(PK), gold_contained, gems_contained, unlocking_time)
 DROP TABLE IF EXISTS chest CASCADE;
 CREATE TABLE chest (
-    id_chest SERIAL PRIMARY KEY,
+    id_chest PRIMARY KEY,
+    rarity VARCHAR(255) NOT NULL,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
-    unlocking_time TIMESTAMP NOT NULL
+    unlocking_time TIMESTAMP NOT NULL,
+    FOREIGN KEY (rarity) REFERENCES rarity (degree),
+    FOREIGN KEY (id_chest) REFERENCES article(id_article)
 );
 
 -- create table pays -> pays(id_player(PK/FK), id_credit_card(PK/FK), id_article(PK/FK), datetime, discount)
@@ -441,11 +447,12 @@ CREATE TABLE is_found (
 -- create table sand_pack -> sand_pack(id_sand_pack(PK), gold_contained, gems_contained, sand(FK))
 DROP TABLE IF EXISTS sand_pack CASCADE;
 CREATE TABLE sand_pack (
-    id_sand_pack SERIAL PRIMARY KEY,
+    id_sand_pack PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
     id_sand VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id_sand) REFERENCES sand (id_title)
+    FOREIGN KEY (id_sand) REFERENCES sand (id_title),
+    FOREIGN KEY (id_sand_pack) REFERENCES article (id_article)
 );
 
 -- create table message -> message(id_message(PK), title, issue, datetime, id_owner(PK), id_clan(FK), id_replier(FK))
