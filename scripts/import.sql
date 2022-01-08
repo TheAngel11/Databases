@@ -417,6 +417,16 @@ INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux G
 DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
 
+-- Battle
+-- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
+DELETE FROM battle;
+INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int FROM battle_aux;
+SELECT * FROM battle;
+
+-- Complete
+-- Explanation: this is the most complex table.
+-- INSERT INTO complete(id_battle, id_player, id_sand, victories_count, defeat_count, points_count, season) SELECT battle, player, sand FROM battle, player, sand WHERE battle.id_battle = player.id_player AND battle.id_battle = sand.id_title;
+
 --Imports MAR
 
 -- Clan

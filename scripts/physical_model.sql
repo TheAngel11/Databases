@@ -189,7 +189,7 @@ DROP TABLE IF EXISTS battle CASCADE;
 CREATE TABLE battle (
     id_battle SERIAL PRIMARY KEY,
     datetime DATE NOT NULL,
-    duration INTEGER NOT NULL,
+    duration TIME NOT NULL,
     points INTEGER NOT NULL,
     trophies_played INTEGER NOT NULL,
     gold_played INTEGER NOT NULL
