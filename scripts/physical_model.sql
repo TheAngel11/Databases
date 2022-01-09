@@ -46,25 +46,28 @@ CREATE TABLE article (
     FOREIGN KEY (id_shop_name) REFERENCES shop (id_shop_name)
 );
 
--- create table building -> building(building_name(PK), life)
+-- create table building -> building(building_name(PK/FK), life)
 DROP TABLE IF EXISTS building CASCADE;
 CREATE TABLE building (
     building_name VARCHAR(255) PRIMARY KEY,
     life INTEGER NOT NULL
+    FOREIGN KEY (building_name) REFERENCES card (id_card_name)
 );
 
--- create table troop -> troop(troop_name(PK), spawn_damage)
+-- create table troop -> troop(troop_name(PK/FK), spawn_damage)
 DROP TABLE IF EXISTS troop CASCADE;
 CREATE TABLE troop (
     troop_name VARCHAR(255) PRIMARY KEY,
     spawn_damage INTEGER NOT NULL
+    FOREIGN KEY (troop_name) REFERENCES card (id_card_name)
 );
 
--- create table enchantment -> enchantment(enchantment_name(PK), effect_radius)
+-- create table enchantment -> enchantment(enchantment_name(PK/Fk), effect_radius)
 DROP TABLE IF EXISTS enchantment CASCADE;
 CREATE TABLE enchantment (
     enchantment_name VARCHAR(255) PRIMARY KEY,
     effect_radius INTEGER NOT NULL
+    FOREIGN KEY (enchantment_name) REFERENCES card (id_card_name)
 );
 
 -- create table role -> role(id_role(PK), description)
@@ -74,7 +77,7 @@ CREATE TABLE role (
     description VARCHAR(300) NOT NULL
 );
 
--- create table clan -> clan(id_clan(PK), description, num_trophy, num_min_trophy, total_points, id_player(FK), gold_needed, datetime)
+--create table clan -> clan(id_clan(PK), description, num_trophy, num_min_trophy, total_points, id_player(FK), gold_needed, datetime)
 DROP TABLE IF EXISTS clan CASCADE;
 CREATE TABLE clan (
     id_clan VARCHAR(100) PRIMARY KEY,
