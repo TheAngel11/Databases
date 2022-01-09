@@ -50,7 +50,7 @@ CREATE TABLE article (
 DROP TABLE IF EXISTS building CASCADE;
 CREATE TABLE building (
     building_name VARCHAR(255) PRIMARY KEY,
-    life INTEGER NOT NULL
+    life INTEGER NOT NULL,
     FOREIGN KEY (building_name) REFERENCES card (id_card_name)
 );
 
@@ -58,7 +58,7 @@ CREATE TABLE building (
 DROP TABLE IF EXISTS troop CASCADE;
 CREATE TABLE troop (
     troop_name VARCHAR(255) PRIMARY KEY,
-    spawn_damage INTEGER NOT NULL
+    spawn_damage INTEGER NOT NULL,
     FOREIGN KEY (troop_name) REFERENCES card (id_card_name)
 );
 
@@ -66,7 +66,7 @@ CREATE TABLE troop (
 DROP TABLE IF EXISTS enchantment CASCADE;
 CREATE TABLE enchantment (
     enchantment_name VARCHAR(255) PRIMARY KEY,
-    effect_radius INTEGER NOT NULL
+    effect_radius INTEGER NOT NULL,
     FOREIGN KEY (enchantment_name) REFERENCES card (id_card_name)
 );
 
@@ -468,7 +468,7 @@ CREATE TABLE message (
     issue VARCHAR(255) NOT NULL,
     datetime TIMESTAMP NOT NULL,
     id_owner VARCHAR(255) NOT NULL,
-    id_clan INTEGER,
+    id_clan VARCHAR(100),
     id_replier VARCHAR(255),
     FOREIGN KEY (id_owner) REFERENCES player (id_player),
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),

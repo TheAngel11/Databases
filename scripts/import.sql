@@ -347,6 +347,17 @@ COPY technology_aux FROM '/Users/Shared/BBDD/technologies.csv'
 DELIMITER ','
 CSV HEADER;
 
+-- Custom Auxiliary Tables
+DROP TABLE IF EXISTS reward_aux;
+CREATE TABLE reward_aux (
+    id_reward INTEGER,
+    trophies_needed INTEGER
+);
+COPY reward_aux
+FROM '/Users/Shared/BBDD/rewards.csv'
+DELIMITER ','
+CSV HEADER;
+
 -- NOW MIGRATE THE DATA --
 
 -- Sand
@@ -509,8 +520,11 @@ WHERE pp.chest_rarity != null;*/
 -- Nota: no ha ninguna tabla auxiliar de creación de clan
 -- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
 DELETE FROM clan;
-INSERT INTO clan(id_clan,description, num_min_trophy, total_points, num_trophy)
-SELECT ca.tag, ca.description,ca.requiredTrophies,ca.score,ca.trophies FROM clans_aux AS ca;
+INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
+SELECT ca.tag, ca.name, ca.description, ca.requiredTrophies, ca.score, ca.trophies, pc.player, random() * (10000 - 25 + 1) + 25, pc."date"
+FROM clans_aux AS ca, player_clan_aux AS pc
+WHERE ca.tag = pc.clan
+AND pc."role" LIKE 'leader:%';
 
 -- Role
 -- ID de SERIAL
