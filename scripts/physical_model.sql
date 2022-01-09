@@ -145,7 +145,7 @@ DROP TABLE IF EXISTS credit_card CASCADE;
 CREATE TABLE credit_card (
     id_credit_card SERIAL PRIMARY KEY,
     datetime DATE NOT NULL,
-    number VARCHAR(255) NOT NULL
+    number BIGINT NOT NULL
 );
 
 -- create table reward -> reward(id_reward(PK), trophies_needed)
@@ -317,7 +317,6 @@ CREATE TABLE joins (
     id_player VARCHAR(255) NOT NULL,
     id_role INTEGER NOT NULL,
     datetime_in TIMESTAMP NOT NULL,
-    datetime_out TIMESTAMP,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_role) REFERENCES role (id_role),
@@ -329,11 +328,12 @@ DROP TABLE IF EXISTS give CASCADE;
 CREATE TABLE give (
     id_clan VARCHAR(100) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
+    date TIMESTAMP NOT NULL,
     gold INTEGER NOT NULL,
     experience INTEGER NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    PRIMARY KEY (id_clan, id_player)
+    PRIMARY KEY (id_clan, id_player, date)
 );
 
 -- create table owns -> owns(card(PK/FK), level(PK/FK), player(PK/FK), date_found, date_level_up, experience_ gained)
@@ -421,12 +421,12 @@ DROP TABLE IF EXISTS buys CASCADE;
 CREATE TABLE buys (
     id_shop_name VARCHAR(255) NOT NULL,
     id_player VARCHAR(255) NOT NULL,
-    id_credit_card INTEGER NOT NULL,
+    id_credit_card BIGINT NOT NULL,
     datetime TIMESTAMP NOT NULL,
     FOREIGN KEY (id_shop_name) REFERENCES shop (id_shop_name),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_credit_card) REFERENCES credit_card (id_credit_card),
-    PRIMARY KEY (id_shop_name, id_player, id_credit_card)
+    PRIMARY KEY (id_shop_name, id_player, id_credit_card, datetime)
 );
 
 -- create table obtains -> obtains(id_success(PK/FK), id_player(PK/FK))
@@ -454,7 +454,6 @@ DROP TABLE IF EXISTS sand_pack CASCADE;
 CREATE TABLE sand_pack (
     id_sand_pack INTEGER PRIMARY KEY,
     gold_contained INTEGER NOT NULL,
-    gems_contained INTEGER NOT NULL,
     id_sand INTEGER NOT NULL,
     FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (id_sand_pack) REFERENCES article (id_article)
@@ -464,15 +463,16 @@ CREATE TABLE sand_pack (
 DROP TABLE IF EXISTS message CASCADE;
 CREATE TABLE message (
     id_message SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    issue VARCHAR(255) NOT NULL,
+    issue VARCHAR(1000) NOT NULL,
     datetime TIMESTAMP NOT NULL,
-    id_owner VARCHAR(255) NOT NULL,
+    id_owner VARCHAR(255),
     id_clan VARCHAR(100),
     id_replier VARCHAR(255),
+    id_reply INTEGER,
     FOREIGN KEY (id_owner) REFERENCES player (id_player),
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (id_replier) REFERENCES player (id_player)
+    FOREIGN KEY (id_replier) REFERENCES player (id_player),
+    FOREIGN KEY (id_reply) REFERENCES message (id_message)
 );
 
 -- create table frees -> frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))

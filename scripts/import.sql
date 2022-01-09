@@ -250,7 +250,7 @@ CREATE TABLE player_card_aux(
 	"name" VARCHAR(100),
 	"level" INTEGER,
 	amount INTEGER,
-	"date" DATE
+	"date" TIMESTAMP
 );
 COPY player_card_aux
 FROM '/Users/Shared/BBDD/playerscards.csv'
@@ -360,6 +360,11 @@ CSV HEADER;
 
 -- NOW MIGRATE THE DATA --
 
+-- PLAYER
+DELETE FROM player;
+INSERT INTO player(id_player, name, exp, trophies, gold, gems)
+SELECT  tag, name, experience, trophies, random() * (10000 - 25 + 1) + 25, random() * (10000 - 25 + 1) + 25 FROM player_aux;
+
 -- Sand
 -- Insert into sand the data from the auxiliary table (sand_aux, quest_arena)
 DELETE FROM sand; -- bypass warning
@@ -392,7 +397,7 @@ INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achie
 -- Mission
 -- mission(id_mission(PK), task_description)
 DELETE FROM mission;
-INSERT INTO mission(id_mission, task_description) SELECT quest_id, quest_requirement FROM player_quest_aux GROUP BY quest_id, quest_requirement;
+INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux GROUP BY quest_id, quest_requirement;
 
 -- Depends
 -- A mission CAN depend on another one
@@ -438,10 +443,6 @@ INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SEL
 -- INSERT INTO complete(id_battle, id_player, id_sand, victories_count, defeat_count, points_count, season) SELECT battle, player, sand FROM battle, player, sand WHERE battle.id_battle = player.id_player AND battle.id_battle = sand.id_title;
 
 -- Imports Angel
--- PLAYER
-DELETE FROM player;
-INSERT INTO player(id_player, name, exp, trophies, gold, gems)
-SELECT  tag, name, experience, trophies, random() * (10000 - 25 + 1) + 25, random() * (10000 - 25 + 1) + 25 FROM player_aux;
 
 -- RARITY
 DELETE FROM rarity;
@@ -473,23 +474,65 @@ WHERE card.radious IS NOT NULL;
 
 -- LEVEL
 INSERT INTO level(level, statistics_multiplier, improvement_cost)
-SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 25 FROM player_card GROUP BY level;
+SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 25 FROM player_card_aux GROUP BY level;
 
 -- STACK
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
 SELECT  deck, title, date, description, player FROM player_deck GROUP BY deck, title, date, description, player;
 
-/*
- - GROUP
---INSERT INTO group(card_name, id_stack)
---SELECT ... FROM ...;
- */
+-- OWNS (TODO)
+-- OWNS
+/*INSERT INTO owns(card, level, player, date_found, date_level_up, experience_gained)
+SELECT c.name, level, player, date, GENERATE DATE HERE, random() * (10000 - 25 + 1) + 25 FROM player_card_aux, card_aux AS c;*/
+
+--GROUP
+INSERT INTO "group"(card_name, id_stack)
+SELECT DISTINCT c.name, deck FROM player_deck, card_aux AS c;
 
 -- Imports Arnau
 
 -- Shop
 INSERT INTO shop(id_shop_name, available_gems)
 VALUES ('SHOP', random() * (10000 - 25 + 1) + 25);
+
+INSERT INTO friend(id_player1, id_player2)
+SELECT requester, requested
+FROM friends_aux;
+
+-- TODO: no hay artículos
+INSERT INTO pays(id_player, id_credit_card, id_article, datetime, discount)
+SELECT pp.player, pp.credit_card, a.id_article, pp.date, pp.discount
+FROM player_purchases_aux AS pp
+JOIN article AS a ON a.times_purchasable = pp.buy_stock;
+
+INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
+SELECT s.id_shop_name, pp.player, pp.credit_card, pp.date
+FROM player_purchases_aux AS pp, shop AS s, credit_card AS cc
+WHERE credit_card = cc.number
+GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;
+
+INSERT INTO obtains(id_success, id_player)
+SELECT "name", player
+FROM player_achievement_aux;
+
+-- TODO: tabla is_found: escoger de manera aleatoria los ID's de chest y de misión.
+
+-- hemos quitado el campo gems_contained de la tabla sand_pack
+-- TODO: como conectamos esta tabla con article?
+INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
+SELECT "id", MAX(arena), MAX(gold)
+FROM sand_pack_aux GROUP BY id;
+
+-- OJO: hemos puesto el campo id_reply que es el id del mensaje al que se responde.
+-- OJO hay que tener dos tablas porque si no hay conflictos con los ids. Y los ids no los podemos autogenerar nosotros porque las referencias de reply se perderían.
+DELETE FROM message;
+INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
+SELECT "id", "text", "date", sender, receiver, answer
+FROM message_players_aux;
+
+INSERT INTO "message" (id_message, issue, datetime, id_clan, id_replier, id_reply)
+SELECT "id", "text", "date", sender, receiver, answer
+FROM message_clans_aux;
 
 -- Article
 -- INSERT INTO article(name, real_price, times_purchasable)
@@ -528,82 +571,73 @@ AND pc."role" LIKE 'leader:%';
 
 -- Role
 -- ID de SERIAL
--- ERROR (NO COMPILA) -> ERROR: value too long for type character varying(255)
 DELETE FROM role;
 INSERT INTO role(description)
 SELECT DISTINCT "role" FROM player_clan_aux;
 
 -- Join
--- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
 DELETE FROM joins;
 INSERT INTO joins(id_clan, id_player, id_role, datetime_in)
 SELECT pa.clan,pa.player, ro.id_role, pa."date" FROM player_clan_aux AS pa, role AS ro
-WHERE ro.name = pa."role";
+WHERE ro.description = pa."role";
 
 -- Give
--- ERROR (NO COMPILA) -> ERROR: column "date" of relation "give" does not exist
 DELETE FROM give;
-INSERT INTO give(id_clan, id_player, gold)
-SELECT pd.clan, pd.player, pd.gold FROM player_clan_donation_aux AS pd;
+INSERT INTO give(id_clan, id_player, gold, experience, date)
+SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.date
+FROM player_clan_donation AS pd
+GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
 -- Fight
--- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
 DELETE FROM fight;
 INSERT INTO fight(id_clan,id_battle)
 SELECT clan, battle FROM clan_battle_aux;
 
 -- Win
 -- Nota: falta la insignia (badge)
--- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
-DELETE FROM win;
-INSERT INTO win(id_clan,id_battle)
-SELECT clan, battle FROM clan_battle_aux;
+INSERT INTO win(id_clan, id_battle, id_title)
+SELECT cl.clan, cl.battle, pb.name
+FROM clan_battle_aux AS cl, player_badge_aux AS pb, joins AS j
+WHERE cl.clan = j.id_clan
+AND j.id_player = pb.player
+AND pb."date" = cl.end_date
+AND pb.name LIKE 'ClanWarWins'
+GROUP BY cl.clan, cl.battle, pb.name, pb.date, cl.end_date, pb.player;
 
 -- Modifier
--- Nota: cambios en la creación de tabla
--- ERROR (NO COMPILA) -> ERROR: column "attack_speed" is of type integer but expression is of type character varying
 DELETE FROM modifier;
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT bu.building, bu.description, bu.cost, bu.mod_damage, bu.mod_hit_speed, bu.mod_radius, bu.mod_spawn_damage, bu.mod_lifetime FROM building_aux AS bu;
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT te.technology, te.description, te.cost, te.mod_damage, te.mod_hit_speed, te.mod_radius, te.mod_spawn_damage, te.mod_lifetime  FROM technology_aux AS te;
 
--- Structure
--- Nota: cambios en la creación de tabla
--- ERROR (NO COMPILA) -> ERROR: column "id_structure" of relation "structure" does not exist
-DELETE FROM structure;
-INSERT INTO structure(id_structure, num_min_trophy)
+--STRUCTURE
+INSERT INTO structure(name_structure, num_min_trophy)
 SELECT bu.building, bu.trophies FROM building_aux AS bu;
 
--- Technology
--- Nota: cambios en la creación de tabla
--- ERROR (NO COMPILA) -> ERROR: insert or update on table "technology" violates foreign key constraint "technology_name_technology_fkey"
-DELETE FROM technology;
+--TECHNOLOGY
 INSERT INTO technology(name_technology, max_level)
 SELECT te.technology, te.max_level FROM technology_aux AS te;
 
--- Need (structure)
--- Nota: cambios en la creación de tabla
--- ERROR (NO COMPILA) -> ERROR: insert or update on table "need" violates foreign key constraint "need_id_structure_fkey"
-DELETE FROM need;
+
+--NEED (structure)
+-- need(id_structure1, id_structure2)
+--Flaten pre
 INSERT INTO need(id_structure, pre_structure)
 SELECT bu.building, bu.prerequisite FROM building_aux AS bu
 WHERE bu.prerequisite is not null;
 
 
---Requires (technology)
--- Nota: cambios en la creación de tabla
--- ERROR (NO COMPILA) -> ERROR: insert or update on table "requires" violates foreign key constraint "requires_id_technology_fkey"
-DELETE FROM requires;
+--REQUIRES
 INSERT INTO requires(id_technology, pre_technology, previous_level)
 SELECT te.technology, te.prerequisite, te.prereq_level FROM technology_aux AS te
 WHERE te.prerequisite is not null;
 
--- Modify
+-- Modify TODO
 -- Nota: cambios en la creación de tabla
 -- Nota 2: falta el id de carta
 -- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
-DELETE FROM modify;
+/*DELETE FROM modify;
 INSERT INTO modify(id_clan, name_modifier)
 SELECT cst.clan, CASE WHEN cst.tech is not null THEN cst.tech ELSE cst.structure END
-FROM clan_tech_structure_aux AS cst;
+FROM clan_tech_structure_aux AS cst;*/
