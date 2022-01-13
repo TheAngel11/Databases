@@ -38,7 +38,7 @@ CREATE TABLE shop (
 -- create table article -> article(id_article(PK), name, real_price, times_purchasable, id_shop_name(FK))
 DROP TABLE IF EXISTS article CASCADE;
 CREATE TABLE article (
-    id_article SERIAL PRIMARY KEY,
+    id_article INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     real_price FLOAT NOT NULL,
     times_purchasable INTEGER NOT NULL,
@@ -409,7 +409,7 @@ CREATE TABLE pays (
     id_credit_card INTEGER NOT NULL,
     id_article INTEGER NOT NULL,
     datetime TIMESTAMP NOT NULL,
-    discount INTEGER NOT NULL,
+    discount FLOAT NOT NULL,
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_credit_card) REFERENCES credit_card (id_credit_card),
     FOREIGN KEY (id_article) REFERENCES article (id_article),
