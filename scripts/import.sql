@@ -367,7 +367,7 @@ CREATE TABLE clan_badge_aux(
 );
 
 COPY clan_badge_aux 
-FROM 'C:\Users\Public\CSV_BBDD\clan_badge.csv'  --canvi dirrecció
+FROM 'C:\Users\Shared\BBDD\clan_badge.csv'  --canvi dirrecció
 DELIMITER ','
 CSV HEADER;
 
@@ -496,7 +496,7 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 
 -- STACK
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
-SELECT  deck, title, date, description, player FROM player_deck GROUP BY deck, title, date, description, player;
+SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY deck, title, date, description, player;
 
 -- OWNS (TODO)
 -- OWNS
@@ -505,7 +505,7 @@ SELECT c.name, level, player, date, GENERATE DATE HERE, random() * (10000 - 25 +
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
-SELECT DISTINCT c.name, deck FROM player_deck, card_aux AS c;
+SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
 
 -- Imports Arnau
 
@@ -523,11 +523,11 @@ SELECT pp.player, pp.credit_card, a.id_article, pp.date, pp.discount
 FROM player_purchases_aux AS pp
 JOIN article AS a ON a.times_purchasable = pp.buy_stock;
 
-INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
+/*INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
 SELECT s.id_shop_name, pp.player, pp.credit_card, pp.date
 FROM player_purchases_aux AS pp, shop AS s, credit_card AS cc
 WHERE credit_card = cc.number
-GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;
+GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;*/
 
 INSERT INTO obtains(id_success, id_player)
 SELECT "name", player
@@ -537,20 +537,20 @@ FROM player_achievement_aux;
 
 -- hemos quitado el campo gems_contained de la tabla sand_pack
 -- TODO: como conectamos esta tabla con article?
-INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
+/*INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
 SELECT "id", MAX(arena), MAX(gold)
-FROM sand_pack_aux GROUP BY id;
+FROM sand_pack_aux GROUP BY id;*/
 
 -- OJO: hemos puesto el campo id_reply que es el id del mensaje al que se responde.
 -- OJO hay que tener dos tablas porque si no hay conflictos con los ids. Y los ids no los podemos autogenerar nosotros porque las referencias de reply se perderían.
-DELETE FROM message;
+/*DELETE FROM message;
 INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
 SELECT "id", "text", "date", sender, receiver, answer
 FROM message_players_aux;
 
 INSERT INTO "message" (id_message, issue, datetime, id_clan, id_replier, id_reply)
 SELECT "id", "text", "date", sender, receiver, answer
-FROM message_clans_aux;
+FROM message_clans_aux;*/
 
 -- Article
 -- INSERT INTO article(name, real_price, times_purchasable)
@@ -613,7 +613,7 @@ SELECT clan, battle FROM clan_battle_aux;
 -- Nou CSV
 INSERT INTO win(id_clan, id_battle, id_title)
 SELECT cb.clan, cb.battle, cb.badge
-FROM clan_badge_aux AS cb
+FROM clan_badge_aux AS cb;
 
 -- Modifier
 DELETE FROM modifier;
