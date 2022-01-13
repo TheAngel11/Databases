@@ -453,10 +453,18 @@ CREATE TABLE is_found (
 DROP TABLE IF EXISTS sand_pack CASCADE;
 CREATE TABLE sand_pack (
     id_sand_pack INTEGER PRIMARY KEY,
-    gold_contained INTEGER NOT NULL,
-    id_sand INTEGER NOT NULL,
-    FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (id_sand_pack) REFERENCES article (id_article)
+);
+
+-- create table belongs -> belongs(id_sand_pack(PK/FK), id_arena(PK/FK), gold_contained)
+DROP TABLE IF EXISTS belongs CASCADE;
+CREATE TABLE belongs (
+    id_sand_pack INTEGER,
+    id_sand INTEGER,
+    gold_contained INTEGER NOT NULL,
+    FOREIGN KEY (id_sand_pack) REFERENCES sand_pack(id_sand_pack),
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
+    PRIMARY KEY (id_sand, id_sand_pack)
 );
 
 -- create table message -> message(id_message(PK), title, issue, datetime, id_owner(PK), id_clan(FK), id_replier(FK))
