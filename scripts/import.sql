@@ -500,8 +500,10 @@ SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY dec
 
 -- OWNS (TODO)
 -- OWNS
-/*INSERT INTO owns(card, level, player, date_found, date_level_up, experience_gained)
-SELECT c.name, level, player, date, GENERATE DATE HERE, random() * (10000 - 25 + 1) + 25 FROM player_card_aux, card_aux AS c;*/
+DELETE FROM owns;
+INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gained)
+SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
+FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
@@ -581,7 +583,7 @@ WHERE pp.chest_rarity != null;*/
 DELETE FROM clan;
 INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
 SELECT ca.tag, ca.name, ca.description, ca.requiredTrophies, ca.score, ca.trophies, pc.player, random() * (10000 - 25 + 1) + 25, pc."date"
-FROM clan_aux AS ca JOIN player_clan_aux AS pc
+FROM clans_aux AS ca JOIN player_clan_aux AS pc
 ON ca.tag = pc.clan
 WHERE pc."role" LIKE 'leader:%';
 
