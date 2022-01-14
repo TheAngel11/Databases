@@ -164,3 +164,47 @@ SELECT * FROM card WHERE sand = 54000025;
 
 -- Model CSV
 SELECT * FROM card_aux WHERE arena = 54000025;
+
+-- Consulta 3: Selecciona todas las insígnias que desbloquea esta arena
+-- Model Fisic
+SELECT * FROM badge
+    INNER JOIN frees ON frees.id_badge = badge.id_title
+    INNER JOIN sand ON sand.id = frees.id_sand
+WHERE sand.id = 54000025;
+
+-- Model CSV
+SELECT * FROM player_badge_aux
+    INNER JOIN sand_aux ON sand_aux.id = player_badge_aux.arena
+WHERE sand_aux.id = 54000025;
+
+------------ MISSION -----------
+--Consulta 1: Selecciona todas las misiones que se han completado
+--Model fisic
+SELECT * FROM mission
+    INNER JOIN accepts a ON mission.id_mission = a.id_mission
+    INNER JOIN player p on a.id_player = p.id_player
+WHERE a.is_completed = true;
+
+-- Model CSV
+SELECT player_tag, quest_id
+FROM player_quest_aux
+GROUP BY player_quest_aux.player_tag, player_quest_aux.quest_id;
+
+SELECT * FROM mission INNER JOIN depends d on mission.id_mission = d.id_mission_1 WHERE id_mission_1 = 110;
+
+------------ BATALLES -----------
+--Consulta 1: Selecciona todas las batallas
+--Model fisic
+SELECT * FROM battle;
+
+-- Model CSV
+SELECT * FROM battle_aux;
+
+SELECT * FROM complete WHERE id_player = '#CQG8R8UV';
+
+------------ ASSOLIMENTS -----------
+--Consulta 1: Selecciona todas las asolimientos
+--Model fisic
+SELECT * FROM success INNER JOIN gets g ON success.id_title = g.id_success
+    INNER JOIN player p ON g.id_player = p.id_player
+WHERE g.id_player = '#2Q9JG29RL';
