@@ -392,7 +392,6 @@ CREATE TABLE bundle (
 DROP TABLE IF EXISTS emoticon CASCADE;
 CREATE TABLE emoticon (
     id_emoticon INTEGER PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
     "path" VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_emoticon) REFERENCES article(id_article)
 );
@@ -481,11 +480,9 @@ CREATE TABLE message (
     issue VARCHAR(1000) NOT NULL,
     datetime TIMESTAMP NOT NULL,
     id_owner VARCHAR(255),
-    id_clan VARCHAR(100),
     id_replier VARCHAR(255),
     id_reply INTEGER,
     FOREIGN KEY (id_owner) REFERENCES player (id_player),
-    FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_reply) REFERENCES message (id_message)
 );
 
