@@ -122,3 +122,30 @@ SELECT cst.clan, COUNT(cst.tech) AS tech, COUNT(cst.structure) AS structure
 FROM clan_tech_structure_aux AS cst
 GROUP BY cst.clan
 ORDER BY cst.clan ASC;
+
+
+-------- BATALLA  ------------
+--Consulta 1
+--Model fisic
+SELECT cb.clan_battle, cb.start_date, cb.end_date, bat.id_battle, bat.duration
+FROM clan_battle AS cb JOIN battle AS bat ON bat.clan_battle = cb.clan_battle
+ORDER BY cb.clan_battle, bat.duration ASC;
+
+--Model CSV
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date, b.duration
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle = b.clan_battle
+ORDER BY cb.battle, b.duration ASC;
+
+--Consulta 2
+--Model fisic
+SELECT cb.clan_battle, f.id_clan, COUNT(bat.id_battle) AS battles
+FROM clan_battle AS cb JOIN fight AS f ON cb.clan_battle = f.clan_battle
+JOIN battle AS bat ON bat.clan_battle = cb.clan_battle
+GROUP BY cb.clan_battle,f.id_clan
+ORDER BY cb.clan_battle, f.id_clan;
+
+--Model CSV
+SELECT DISTINCT cb.battle, cb.clan, COUNT(b.clan_battle) AS battles
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle = b.clan_battle
+GROUP BY cb.battle, cb.clan
+ORDER BY cb.battle, cb.clan;
