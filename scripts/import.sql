@@ -405,6 +405,7 @@ DELETE FROM reward;
 DELETE FROM chest;
 DELETE FROM emoticon;
 DELETE FROM bundle;
+DELETE FROM belongs;
 DELETE FROM sand_pack;
 DELETE FROM article;
 DELETE FROM shop;
@@ -437,6 +438,7 @@ DELETE FROM mission;
 DELETE FROM gets;
 DELETE FROM success;
 DELETE FROM season;
+DELETE FROM card;
 DELETE FROM sand;
 DELETE FROM clan;
 DELETE FROM card;
@@ -637,9 +639,6 @@ FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
 SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
-
-
---Imports MAR
 
 -- Clan
 DELETE FROM clan CASCADE;
