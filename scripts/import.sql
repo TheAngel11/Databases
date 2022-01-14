@@ -473,6 +473,7 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
+select * from frees;
 
 --Clan_battle
 DELETE FROM clan_battle;
@@ -480,8 +481,6 @@ INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
 FROM clan_battle_aux AS cb 
 GROUP BY cb.battle, cb.start_date, cb.end_date;
-
-
 
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
@@ -589,6 +588,7 @@ FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
 SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
+
 
 --Imports MAR
 
@@ -970,8 +970,9 @@ JOIN success AS s ON s.id_title = pa.name;
 -- Is found
 DELETE FROM is_found;
 INSERT INTO is_found(id_chest, id_mission)
-SELECT DISTINCT chest, mission
-FROM is_found_aux;
+SELECT DISTINCT isf.chest, isf.mission
+FROM is_found_aux AS isf
+JOIN chest AS c ON c.id_chest = isf.chest;
 
 -- Pays
 /*DELETE FROM pays;

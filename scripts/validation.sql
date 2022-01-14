@@ -149,3 +149,18 @@ SELECT DISTINCT cb.battle, cb.clan, COUNT(b.clan_battle) AS battles
 FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle = b.clan_battle
 GROUP BY cb.battle, cb.clan
 ORDER BY cb.battle, cb.clan;
+
+------------ ARENA -----------
+--Consulta 1
+--Model fisic
+SELECT * FROM sand;
+
+-- Model CSV
+SELECT * FROM sand_aux;
+
+-- Consulta 2. Select all the cards that are unlocked in the arena with id 54000025
+-- Model Fisic
+SELECT * FROM card WHERE sand = 54000025;
+
+-- Model CSV
+SELECT * FROM card_aux WHERE arena = 54000025;

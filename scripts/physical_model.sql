@@ -38,7 +38,7 @@ CREATE TABLE shop (
 -- create table article -> article(id_article(PK), name, real_price, times_purchasable, id_shop_name(FK))
 DROP TABLE IF EXISTS article CASCADE;
 CREATE TABLE article (
-    id_article INTEGER PRIMARY KEY,
+    id_article SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     real_price FLOAT NOT NULL,
     times_purchasable INTEGER NOT NULL,
@@ -403,7 +403,7 @@ CREATE TABLE chest (
     rarity VARCHAR(100) NOT NULL,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
-    unlocking_time TIMESTAMP NOT NULL,
+    unlocking_time INTEGER NOT NULL,
     FOREIGN KEY (rarity) REFERENCES rarity (degree),
     FOREIGN KEY (id_chest) REFERENCES article(id_article)
 );
