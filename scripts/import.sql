@@ -367,12 +367,11 @@ CREATE TABLE clan_badge_aux(
 );
 
 COPY clan_badge_aux 
-FROM 'C:\Users\Shared\BBDD\clan_badge.csv'  --canvi dirrecció
+FROM '/Users/Shared/BBDD/clan_badge.csv'
 DELIMITER ','
 CSV HEADER;
 
 ALTER TABLE clan_badge_aux ALTER COLUMN battle TYPE INTEGER USING battle::integer;
-
 
 -- NOW MIGRATE THE DATA --
 
@@ -443,7 +442,8 @@ INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_
 -- That is made by the GROUP BY statement.
 DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
-
+--Badge de clan
+INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
@@ -452,20 +452,26 @@ INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.ar
 
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
-DELETE FROM battle;
-INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int FROM battle_aux;
-INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
+
+INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) 
+SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int 
+FROM battle_aux;
+
 
 -- Complete
--- Explanation: this is the most complex table.
--- INSERT INTO complete(id_battle, id_player, id_sand, victories_count, defeat_count, points_count, season) SELECT battle, player, sand FROM battle, player, sand WHERE battle.id_battle = player.id_player AND battle.id_battle = sand.id_title;
+-- Explanation: we are importing the data from a csv.
+COPY complete
+FROM '/Users/Shared/BBDD/complete.csv'
+DELIMITER ','
+CSV HEADER;
 
 -- Imports Angel
 
 -- RARITY
 DELETE FROM rarity;
 INSERT INTO rarity(degree, multiplicative_factor)
-SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux GROUP BY rarity;
+SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux
+GROUP BY rarity;
 
 -- CARD
 DELETE FROM card;
@@ -480,9 +486,9 @@ WHERE card.lifetime IS NOT NULL;
 
 -- TROOP
 DELETE FROM troop;
-INSERT INTO troop (troop_name, spawn_damage)
-SELECT name, spawn_damage FROM card_aux AS card
-WHERE card.spawn_damage IS NOT NULL;
+    INSERT INTO troop (troop_name, spawn_damage)
+    SELECT name, spawn_damage FROM card_aux AS card
+    WHERE card.spawn_damage IS NOT NULL;
 
 -- ENCHANTMENT
 DELETE FROM enchantment;
@@ -498,12 +504,13 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
 SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY deck, title, date, description, player;
 
--- OWNS (TODO)
 -- OWNS
+
 DELETE FROM owns;
 INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gained)
 SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
 FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
+
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
@@ -580,7 +587,7 @@ WHERE pp.chest_rarity != null;*/
 --Imports MAR
 
 -- Clan
-DELETE FROM clan;
+DELETE FROM clan CASCADE;
 INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
 SELECT ca.tag, ca.name, ca.description, ca.requiredTrophies, ca.score, ca.trophies, pc.player, random() * (10000 - 25 + 1) + 25, pc."date"
 FROM clans_aux AS ca JOIN player_clan_aux AS pc
@@ -603,13 +610,30 @@ ON ro.description = pc."role";
 DELETE FROM give;
 INSERT INTO give(id_clan, id_player, gold, experience, date)
 SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.date
-FROM player_clan_donation AS pd
+FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
--- Fight
+--CLan_battle
+DELETE FROM clan_battle;
+INSERT INTO clan_battle(clan_battle, start_date, end_date)
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
+FROM clan_battle_aux AS cb
+GROUP BY cb.battle, cb.start_date, cb.end_date;
+
+--Fight
 DELETE FROM fight;
-INSERT INTO fight(id_clan,id_battle)
-SELECT clan, battle FROM clan_battle_aux;
+INSERT INTO fight(clan_battle, battle)
+SELECT cb.battle, ba.id_battle
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle= b.clan_battle
+, battle AS ba
+WHERE b.duration = ba.duration
+AND b.date = ba.datetime
+GROUP BY cb.battle, ba.id_battle;
+
+--Battle_clan
+DELETE FROM battle_clan;
+INSERT INTO battle_clan(id_clan,clan_battle)
+SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
 -- Win
 -- Nou CSV
@@ -624,6 +648,12 @@ SELECT bu.building, bu.description, bu.cost, bu.mod_damage, bu.mod_hit_speed, bu
 
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT te.technology, te.description, te.cost, te.mod_damage, te.mod_hit_speed, te.mod_radius, te.mod_spawn_damage, te.mod_lifetime  FROM technology_aux AS te;
+
+UPDATE modifier SET damage = 0 WHERE damage is null;
+UPDATE modifier SET attack_speed = 0 WHERE attack_speed is null;
+UPDATE modifier SET effect_radius = 0 WHERE effect_radius is null;
+UPDATE modifier SET spawn_damage = 0 WHERE spawn_damage is null;
+UPDATE modifier SET life = 0 WHERE life is null;
 
 --STRUCTURE
 INSERT INTO structure(name_structure, num_min_trophy)

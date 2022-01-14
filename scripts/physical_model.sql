@@ -206,26 +206,40 @@ CREATE TABLE complete (
     id_battle INTEGER NOT NULL,
     id_player VARCHAR(255) NOT NULL,
     id_sand INTEGER NOT NULL,
-    victories_count INTEGER NOT NULL,
-    defeat_count INTEGER NOT NULL,
-    points_count INTEGER NOT NULL,
     season VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (season) REFERENCES season (id_name),
     PRIMARY KEY (id_battle, id_player, id_sand)
+); 
+
+DROP TABLE IF EXISTS  clan_battle CASCADE;
+CREATE TABLE clan_battle (
+    clan_battle INTEGER NOT NULL PRIMARY KEY,
+	start_date DATE NOT NULL,
+	end_date DATE NOT NULL	
 );
 
--- create table fight -> fight(id_clan(PK/FK), id_battle(PK/FK))
+DROP TABLE IF EXISTS  battle_clan CASCADE;
+CREATE TABLE battle_clan (
+    id_clan VARCHAR(100) NOT NULL,
+    clan_battle INTEGER NOT NULL,
+    FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
+	FOREIGN KEY (clan_battle) REFERENCES clan_battle (clan_battle),
+	PRIMARY KEY (id_clan, clan_battle)
+);
+
+
 DROP TABLE IF EXISTS fight CASCADE;
 CREATE TABLE fight (
-    id_clan VARCHAR(100) NOT NULL,
-    id_battle INTEGER NOT NULL,
-    FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
-    PRIMARY KEY (id_clan, id_battle)
-);
+    clan_battle INTEGER NOT NULL,
+    battle INTEGER NOT NULL,
+	FOREIGN KEY (clan_battle) REFERENCES clan_battle (clan_battle),
+    FOREIGN KEY (battle) REFERENCES battle (id_battle),
+    PRIMARY KEY(clan_battle, battle)
+); 
+
 
 -- create table badge -> badge(id_title(PK), image_path)
 DROP TABLE IF EXISTS badge CASCADE;
@@ -241,7 +255,7 @@ CREATE TABLE win (
     id_battle INTEGER NOT NULL,
     id_title VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
+    FOREIGN KEY (id_battle) REFERENCES clan_battle (clan_battle),
     FOREIGN KEY (id_title) REFERENCES badge (id_title),
     PRIMARY KEY (id_clan, id_battle, id_title)
 );
@@ -303,7 +317,8 @@ CREATE TABLE modify (
     id_clan VARCHAR(100) NOT NULL,
     card_name VARCHAR(255) NOT NULL,
     name_modifier VARCHAR(100) NOT NULL,
-    amount_donations INTEGER,
+    "level" INTEGER NOT NULL,
+    "date" DATE NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (card_name) REFERENCES card (id_card_name),
     FOREIGN KEY (name_modifier) REFERENCES modifier (name_modifier),
