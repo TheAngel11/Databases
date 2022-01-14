@@ -255,7 +255,7 @@ CREATE TABLE win (
     id_battle INTEGER NOT NULL,
     id_title VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
+    FOREIGN KEY (id_battle) REFERENCES clan_battle (clan_battle),
     FOREIGN KEY (id_title) REFERENCES badge (id_title),
     PRIMARY KEY (id_clan, id_battle, id_title)
 );
