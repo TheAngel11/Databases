@@ -479,7 +479,6 @@ CREATE TABLE message (
     id_reply INTEGER,
     FOREIGN KEY (id_owner) REFERENCES player (id_player),
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (id_replier) REFERENCES player (id_player),
     FOREIGN KEY (id_reply) REFERENCES message (id_message)
 );
 
