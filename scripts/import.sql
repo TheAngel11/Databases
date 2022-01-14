@@ -358,6 +358,22 @@ FROM '/Users/Shared/BBDD/rewards.csv'
 DELIMITER ','
 CSV HEADER;
 
+DROP TABLE IF EXISTS clan_badge_aux;
+CREATE TABLE clan_badge_aux(
+	battle VARCHAR,
+	clan VARCHAR(100),
+	badge VARCHAR(100),
+	url VARCHAR(100)
+);
+
+COPY clan_badge_aux 
+FROM 'C:\Users\Shared\BBDD\clan_badge.csv'  --canvi dirrecció
+DELIMITER ','
+CSV HEADER;
+
+ALTER TABLE clan_badge_aux ALTER COLUMN battle TYPE INTEGER USING battle::integer;
+
+
 -- NOW MIGRATE THE DATA --
 
 -- PLAYER
@@ -428,6 +444,7 @@ INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_
 DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
 
+
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
 DELETE FROM frees;
@@ -435,8 +452,11 @@ INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.ar
 
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
-DELETE FROM battle;
-INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int FROM battle_aux;
+
+INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) 
+SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int 
+FROM battle_aux;
+--INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
 
 -- Complete
 -- Explanation: this is the most complex table.
@@ -479,15 +499,19 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 
 -- STACK
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
-SELECT  deck, title, date, description, player FROM player_deck GROUP BY deck, title, date, description, player;
+SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY deck, title, date, description, player;
 
 -- OWNS
-INSERT INTO owns(card, level, player, date_found, date_level_up, experience_gained)
-SELECT c.name, level, player, 'now', date, random() * (10000 - 25 + 1) + 25 FROM player_card, card_aux AS c;
+
+DELETE FROM owns;
+INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gained)
+SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
+FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
+
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
-SELECT DISTINCT c.name, deck FROM player_deck, card_aux AS c;
+SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
 
 -- Imports Arnau
 
@@ -505,11 +529,11 @@ SELECT pp.player, pp.credit_card, a.id_article, pp.date, pp.discount
 FROM player_purchases_aux AS pp
 JOIN article AS a ON a.times_purchasable = pp.buy_stock;
 
-INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
+/*INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
 SELECT s.id_shop_name, pp.player, pp.credit_card, pp.date
 FROM player_purchases_aux AS pp, shop AS s, credit_card AS cc
 WHERE credit_card = cc.number
-GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;
+GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;*/
 
 INSERT INTO obtains(id_success, id_player)
 SELECT "name", player
@@ -519,20 +543,20 @@ FROM player_achievement_aux;
 
 -- hemos quitado el campo gems_contained de la tabla sand_pack
 -- TODO: como conectamos esta tabla con article?
-INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
+/*INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
 SELECT "id", MAX(arena), MAX(gold)
-FROM sand_pack_aux GROUP BY id;
+FROM sand_pack_aux GROUP BY id;*/
 
 -- OJO: hemos puesto el campo id_reply que es el id del mensaje al que se responde.
 -- OJO hay que tener dos tablas porque si no hay conflictos con los ids. Y los ids no los podemos autogenerar nosotros porque las referencias de reply se perderían.
-DELETE FROM message;
+/*DELETE FROM message;
 INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
 SELECT "id", "text", "date", sender, receiver, answer
 FROM message_players_aux;
 
 INSERT INTO "message" (id_message, issue, datetime, id_clan, id_replier, id_reply)
 SELECT "id", "text", "date", sender, receiver, answer
-FROM message_clans_aux;
+FROM message_clans_aux;*/
 
 -- Article
 -- INSERT INTO article(name, real_price, times_purchasable)
@@ -560,14 +584,12 @@ WHERE pp.chest_rarity != null;*/
 --Imports MAR
 
 -- Clan
--- Nota: no ha ninguna tabla auxiliar de creación de clan
--- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
-DELETE FROM clan;
+DELETE FROM clan CASCADE;
 INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
 SELECT ca.tag, ca.name, ca.description, ca.requiredTrophies, ca.score, ca.trophies, pc.player, random() * (10000 - 25 + 1) + 25, pc."date"
-FROM clans_aux AS ca, player_clan_aux AS pc
-WHERE ca.tag = pc.clan
-AND pc."role" LIKE 'leader:%';
+FROM clans_aux AS ca JOIN player_clan_aux AS pc
+ON ca.tag = pc.clan
+WHERE pc."role" LIKE 'leader:%';
 
 -- Role
 -- ID de SERIAL
@@ -578,38 +600,54 @@ SELECT DISTINCT "role" FROM player_clan_aux;
 -- Join
 DELETE FROM joins;
 INSERT INTO joins(id_clan, id_player, id_role, datetime_in)
-SELECT pa.clan,pa.player, ro.id_role, pa."date" FROM player_clan_aux AS pa, role AS ro
-WHERE ro.description = pa."role";
+SELECT pc.clan, pc.player, ro.id_role, pc."date" FROM player_clan_aux AS pc JOIN role AS ro
+ON ro.description = pc."role";
 
 -- Give
 DELETE FROM give;
 INSERT INTO give(id_clan, id_player, gold, experience, date)
 SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.date
-FROM player_clan_donation AS pd
+FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
--- Fight
+DELETE FROM clan_battle;
+INSERT INTO clan_battle(clan_battle, start_date, end_date)
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
+FROM clan_battle_aux AS cb
+GROUP BY cb.battle, cb.start_date, cb.end_date;
+
 DELETE FROM fight;
-INSERT INTO fight(id_clan,id_battle)
+INSERT INTO fight(clan_battle, battle)
+SELECT cb.battle, ba.id_battle
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle= b.clan_battle
+, battle AS ba
+WHERE b.duration = ba.duration
+AND b.date = ba.datetime
+GROUP BY cb.battle, ba.id_battle;
+
+DELETE FROM battle_clan;
+INSERT INTO battle_clan(id_clan,clan_battle)
 SELECT clan, battle FROM clan_battle_aux;
 
 -- Win
--- Nota: falta la insignia (badge)
+/*-- Nou CSV
 INSERT INTO win(id_clan, id_battle, id_title)
-SELECT cl.clan, cl.battle, pb.name
-FROM clan_battle_aux AS cl, player_badge_aux AS pb, joins AS j
-WHERE cl.clan = j.id_clan
-AND j.id_player = pb.player
-AND pb."date" = cl.end_date
-AND pb.name LIKE 'ClanWarWins'
-GROUP BY cl.clan, cl.battle, pb.name, pb.date, cl.end_date, pb.player;
+SELECT cb.clan, cb.battle, cb.badge
+FROM clan_badge_aux AS cb;*/
 
 -- Modifier
 DELETE FROM modifier;
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT bu.building, bu.description, bu.cost, bu.mod_damage, bu.mod_hit_speed, bu.mod_radius, bu.mod_spawn_damage, bu.mod_lifetime FROM building_aux AS bu;
+
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT te.technology, te.description, te.cost, te.mod_damage, te.mod_hit_speed, te.mod_radius, te.mod_spawn_damage, te.mod_lifetime  FROM technology_aux AS te;
+
+UPDATE modifier SET damage = 0 WHERE damage is null;
+UPDATE modifier SET attack_speed = 0 WHERE attack_speed is null;
+UPDATE modifier SET effect_radius = 0 WHERE effect_radius is null;
+UPDATE modifier SET spawn_damage = 0 WHERE spawn_damage is null;
+UPDATE modifier SET life = 0 WHERE life is null;
 
 --STRUCTURE
 INSERT INTO structure(name_structure, num_min_trophy)
@@ -627,17 +665,111 @@ INSERT INTO need(id_structure, pre_structure)
 SELECT bu.building, bu.prerequisite FROM building_aux AS bu
 WHERE bu.prerequisite is not null;
 
-
 --REQUIRES
 INSERT INTO requires(id_technology, pre_technology, previous_level)
 SELECT te.technology, te.prerequisite, te.prereq_level FROM technology_aux AS te
 WHERE te.prerequisite is not null;
 
--- Modify TODO
--- Nota: cambios en la creación de tabla
--- Nota 2: falta el id de carta
--- ERROR (NO COMPILA) -> ERROR: column "id_clan" is of type integer but expression is of type character varying
-/*DELETE FROM modify;
-INSERT INTO modify(id_clan, name_modifier)
-SELECT cst.clan, CASE WHEN cst.tech is not null THEN cst.tech ELSE cst.structure END
-FROM clan_tech_structure_aux AS cst;*/
+---MODIFY
+-- TOTES LES CARTES
+--Structure
+DELETE FROM modify;
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN building_aux AS bu ON cst.structure = bu.building
+WHERE cst.structure is not null
+AND bu.mod_spawn_damage is  null
+AND bu.mod_radius is  null
+AND bu.mod_lifetime is  null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+--Technology
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN technology_aux AS te ON cst.tech = te.technology
+WHERE cst.tech is not null
+AND te.mod_spawn_damage is  null
+AND te.mod_radius is  null
+AND te.mod_lifetime is  null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+---TROOP
+--Structure
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN troop AS tr ON o.card = tr.troop_name
+JOIN building_aux AS bu ON cst.structure = bu.building
+WHERE cst.structure is not null
+AND bu.mod_spawn_damage is not null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+--Technology
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN troop AS tr ON o.card = tr.troop_name
+JOIN technology_aux AS te ON cst.tech = te.technology
+WHERE cst.tech is not null
+AND te.mod_spawn_damage is not null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+---BUILDING
+--Structure
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN building AS b ON o.card = b.building_name
+JOIN building_aux AS bu ON cst.structure = bu.building
+WHERE cst.structure is not null
+AND bu.mod_lifetime is not null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+--Technology
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN building AS b ON o.card = b.building_name
+JOIN technology_aux AS te ON cst.tech = te.technology
+WHERE cst.tech is not null
+AND te.mod_lifetime is not null 
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+---ENCHANTMENT
+--Structure
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN enchantment AS en ON o.card = en.enchantment_name
+JOIN building_aux AS bu ON cst.structure = bu.building
+WHERE cst.structure is not null
+AND bu.mod_radius is not null
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
+
+--Technology
+INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
+SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
+JOIN owns AS o ON j.id_player = o.player
+JOIN enchantment AS en ON o.card = en.enchantment_name
+JOIN technology_aux AS te ON cst.tech = te.technology
+WHERE cst.tech is not null
+AND te.mod_radius is not null 
+GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
+;
