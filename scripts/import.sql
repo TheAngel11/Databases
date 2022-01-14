@@ -367,12 +367,11 @@ CREATE TABLE clan_badge_aux(
 );
 
 COPY clan_badge_aux 
-FROM 'C:\Users\Shared\BBDD\clan_badge.csv'  --canvi dirrecció
+FROM '/Users/Shared/BBDD/clan_badge.csv'
 DELIMITER ','
 CSV HEADER;
 
 ALTER TABLE clan_badge_aux ALTER COLUMN battle TYPE INTEGER USING battle::integer;
-
 
 -- NOW MIGRATE THE DATA --
 
@@ -459,8 +458,11 @@ FROM battle_aux;
 --INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
 
 -- Complete
--- Explanation: this is the most complex table.
--- INSERT INTO complete(id_battle, id_player, id_sand, victories_count, defeat_count, points_count, season) SELECT battle, player, sand FROM battle, player, sand WHERE battle.id_battle = player.id_player AND battle.id_battle = sand.id_title;
+-- Explanation: we are importing the data from a csv.
+COPY complete
+FROM '/Users/Shared/BBDD/complete.csv'
+DELIMITER ','
+CSV HEADER;
 
 -- Imports Angel
 
@@ -627,7 +629,7 @@ GROUP BY cb.battle, ba.id_battle;
 
 DELETE FROM battle_clan;
 INSERT INTO battle_clan(id_clan,clan_battle)
-SELECT clan, battle FROM clan_battle_aux;
+SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
 -- Win
 /*-- Nou CSV
