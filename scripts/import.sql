@@ -396,6 +396,55 @@ FROM '/Users/Shared/BBDD/is_found.csv'
 DELIMITER ','
 CSV HEADER;
 
+-- DELETE PART 
+DELETE FROM buys;
+DELETE FROM is_found;
+DELETE FROM obtains;
+DELETE FROM friend;
+DELETE FROM reward;
+DELETE FROM chest;
+DELETE FROM emoticon;
+DELETE FROM bundle;
+DELETE FROM sand_pack;
+DELETE FROM article;
+DELETE FROM shop;
+DELETE FROM message;
+DELETE FROM modify;
+DELETE FROM requires;
+DELETE FROM need;
+DELETE FROM technology;
+DELETE FROM structure;
+DELETE FROM modifier;
+DELETE FROM win;
+DELETE FROM fight;
+DELETE FROM give;
+DELETE FROM joins;
+DELETE FROM role;
+DELETE FROM "group";
+DELETE FROM stack;
+DELETE FROM owns;
+DELETE FROM level;
+DELETE FROM enchantment;
+DELETE FROM troop;
+DELETE FROM building;
+DELETE FROM complete;
+DELETE FROM frees;
+DELETE FROM badge;
+DELETE FROM credit_card;
+DELETE FROM accepts;
+DELETE FROM depends;
+DELETE FROM mission;
+DELETE FROM gets;
+DELETE FROM success;
+DELETE FROM season;
+DELETE FROM sand;
+DELETE FROM clan;
+DELETE FROM card;
+DELETE FROM rarity;
+DELETE FROM battle;
+DELETE FROM clan_battle;
+DELETE FROM player;
+
 -- NOW MIGRATE THE DATA --
 
 -- PLAYER
@@ -654,13 +703,11 @@ SELECT te.technology, te.max_level FROM technology_aux AS te;
 
 
 --NEED (structure)
--- need(id_structure1, id_structure2)
---Flaten pre
 INSERT INTO need(id_structure, pre_structure)
 SELECT bu.building, bu.prerequisite FROM building_aux AS bu
 WHERE bu.prerequisite is not null;
 
---REQUIRES
+--REQUIRES(technology)
 INSERT INTO requires(id_technology, pre_technology, previous_level)
 SELECT te.technology, te.prerequisite, te.prereq_level FROM technology_aux AS te
 WHERE te.prerequisite is not null;
