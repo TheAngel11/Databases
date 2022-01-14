@@ -1,42 +1,87 @@
---CARD
+-----CARD-----
 
 --Model físic
 
 --Numero de buildings, enchantment i tropes totals
-SELECT c.id_card_name AS card, 
-COUNT(b.building_name) AS num_buildings, 
-COUNT(enchantment) AS num_enchantments,
-COUNT(troop) AS num_troops
-FROM card AS c JOIN building AS b ON c.id_card_name = b.building_name
-JOIN enchantment AS e ON c.id_card_name = e.enchantment_name
-JOIN troop AS t ON c.id_card_name = t.troop_name;
+SELECT COUNT(DISTINCT b.building_name) AS num_buildings, 
+COUNT(DISTINCT e.enchantment_name) AS num_enchantments,
+COUNT(DISTINCT t.troop_name) AS num_troops
+FROM building AS b,
+enchantment AS e,
+troop AS t;
 
---Seleccionar totes les cartes d'una certa raresa
+
+--Seleccionar totes les cartes ordenades per raresa
 SELECT c.id_card_name AS card, c.rarity AS rarity
-FROM card AS c JOIN 
---Seleccionar totes les cartes d'un jugador d'un nivell en concret
-
---Seleccionar el nombre de cartes que hi ha en una pila
+FROM card AS c JOIN rarity AS r ON c.rarity = r.degree
+GROUP BY c.id_card_name, rarity
+ORDER BY rarity;
+--Seleccionar les cartes d'un jugador una per una amb cartes de nivell major a 5
+SELECT c.id_card_name AS card, p.id_player AS player, l.level AS level
+FROM card AS c JOIN owns AS o ON c.id_card_name =  o.card
+JOIN player AS p ON p.id_player = o.player
+JOIN level AS l ON l.level = o.level
+GROUP BY c.id_card_name , p.id_player, l.level HAVING l.level > 5
+ORDER BY c.id_card_name;
 
 --Seleccionar quantes piles te un jugador
-
---Model Csv
+SELECT COUNT(DISTINCT s.id_stack) AS num_stacks
+FROM stack AS s JOIN player AS p ON s.id_player = p.id_player
+--GROUP BY p.id_player
+--ORDER BY p.id_player;
+    -- Model Csv --
 
 --Numero de buildings, enchantment i tropes totals
-SELECT c.id_card_name AS card_aux, 
-COUNT(c.buildings) AS num_buildings, 
-COUNT(c.enchantment) AS num_enchantments,
-COUNT(c.troop) AS num_troops
-FROM card AS c JOIN building AS b ON c.id_card_name = b.building_name
-JOIN enchantment AS e ON c.id_card_name = e.enchantment_name
-JOIN troop AS t ON c.id_card_name = t.troop_name;
+--num buildings
+SELECT COUNT(DISTINCT c.name) AS num_buildings
+FROM card_aux AS c
+WHERE lifetime IS NOT NULL;
 
+--num enchantments
+SELECT COUNT(DISTINCT c.name) AS num_enchantments
+FROM card_aux AS c
+WHERE radious IS NOT NULL;
+
+--num troops
+SELECT COUNT(DISTINCT c.name) AS num_troops
+FROM card_aux AS c
+WHERE spawn_damage IS NOT NULL;
+
+COUNT(DISTINCT e.enchantment_name) AS num_enchantments
+COUNT(DISTINCT t.troop_name) AS num_troops
+FROM c AS b 
+, enchantment AS e 
+, troop AS t;
+    
 --Seleccionar totes les cartes d'una certa raresa
-SELECT c.id_card_name AS card, c.rarity AS rarity
-FROM card AS c JOIN 
---Seleccionar totes les cartes d'un jugador d'un nivell en concret
+SELECT c.name AS card, c.rarity AS rarity
+FROM card_aux AS c
+GROUP BY c.name, c.rarity
+ORDER BY rarity;
+--Seleccionar les cartes d'un jugador una per una amb cartes de nivell major a 5
+SELECT c.name AS card, p.tag AS tag, p_c.level AS level
+FROM card_aux AS c JOIN player_card_aux AS p_c ON p_c.name = c.name
+JOIN player_aux AS p ON p_c.player = p.tag
+GROUP BY c.name, tag, level HAVING level > 5
+ORDER BY card;
 
---Seleccionar el nombre de cartes que hi ha en una pila
+-----PLAYER------
+    -- Model Fisic --
+--Selecciona els jugadors amb més de 5 piles
+
+--Caracteristiques de Jugador
+SELECT p.id_player AS player, p.name, p.exp, p.trophies, p.gold, p.gems
+FROM player AS p
+ORDER BY player;
+
+
+
+    -- Model Csv --
+
+--Caracteristiques de Jugador
+SELECT p.tag, p.name, p.experience, p.trophies
+FROM player_aux AS p
+ORDER BY p.tag;
 
 
 ----------------- CLAN -----------------
