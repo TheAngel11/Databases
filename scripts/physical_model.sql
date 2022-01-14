@@ -1,7 +1,7 @@
 -- Create table player -> player(id_player(PK), name, exp, trophies, gold, gems)
 DROP TABLE IF EXISTS player CASCADE;
 CREATE TABLE player (
-    id_player VARCHAR(255) PRIMARY KEY,
+    id_player VARCHAR(100) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     exp INTEGER NOT NULL,
     trophies INTEGER NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE sand (
 -- create table season -> season(id_name(PK), start_date, end_date)
 DROP TABLE IF EXISTS season CASCADE;
 CREATE TABLE season (
-    id_name VARCHAR(255) PRIMARY KEY,
+    id_name VARCHAR(100) PRIMARY KEY,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL
 );
@@ -31,7 +31,7 @@ CREATE TABLE season (
 -- create table shop -> shop(id_shop_name(PK), available_gems)
 DROP TABLE IF EXISTS shop CASCADE;
 CREATE TABLE shop (
-    id_shop_name VARCHAR(255) PRIMARY KEY,
+    id_shop_name VARCHAR(100) PRIMARY KEY,
     available_gems INTEGER NOT NULL
 );
 
@@ -71,14 +71,14 @@ CREATE TABLE clan (
 -- create table rarity -> rarity(degree(PK), multiplicative_factor)
 DROP TABLE IF EXISTS rarity CASCADE;
 CREATE TABLE rarity (
-    degree VARCHAR(255) PRIMARY KEY,
+    degree VARCHAR(100) PRIMARY KEY,
     multiplicative_factor FLOAT NOT NULL
 );
 
 -- create table card -> card(card_name(PK), damage, attack_speed, rarity(FK), id_sand(FK))
 DROP TABLE IF EXISTS card CASCADE;
 CREATE TABLE card (
-    id_card_name VARCHAR(255) PRIMARY KEY,
+    id_card_name VARCHAR(100) PRIMARY KEY,
     damage INTEGER NOT NULL,
     attack_speed INTEGER NOT NULL,
     rarity VARCHAR(255) NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE card (
 -- create table enchantment -> enchantment(enchantment_name(PK/Fk), effect_radius)
 DROP TABLE IF EXISTS enchantment CASCADE;
 CREATE TABLE enchantment (
-    enchantment_name VARCHAR(255) PRIMARY KEY,
+    enchantment_name VARCHAR(100) PRIMARY KEY,
     effect_radius INTEGER NOT NULL,
     FOREIGN KEY (enchantment_name) REFERENCES card (id_card_name)
 );
@@ -98,7 +98,7 @@ CREATE TABLE enchantment (
 -- create table building -> building(building_name(PK/FK), life)
 DROP TABLE IF EXISTS building CASCADE;
 CREATE TABLE building (
-    building_name VARCHAR(255) PRIMARY KEY,
+    building_name VARCHAR(100) PRIMARY KEY,
     life INTEGER NOT NULL,
     FOREIGN KEY (building_name) REFERENCES card (id_card_name)
 );
@@ -106,7 +106,7 @@ CREATE TABLE building (
 -- create table troop -> troop(troop_name(PK/FK), spawn_damage)
 DROP TABLE IF EXISTS troop CASCADE;
 CREATE TABLE troop (
-    troop_name VARCHAR(255) PRIMARY KEY,
+    troop_name VARCHAR(100) PRIMARY KEY,
     spawn_damage INTEGER NOT NULL,
     FOREIGN KEY (troop_name) REFERENCES card (id_card_name)
 );
@@ -133,7 +133,7 @@ CREATE TABLE stack (
 -- create table group -> group(card_name(PK/FK), id_stack(PK/FK))
 DROP TABLE IF EXISTS "group" CASCADE;
 CREATE TABLE "group" (
-    card_name VARCHAR(255) NOT NULL,
+    card_name VARCHAR(100) NOT NULL,
     id_stack INTEGER NOT NULL,
     FOREIGN KEY (card_name) REFERENCES card (id_card_name),
     FOREIGN KEY (id_stack) REFERENCES stack (id_stack),
@@ -158,7 +158,7 @@ CREATE TABLE reward (
 -- create table success -> success(id_title(PK), gems_reward)
 DROP TABLE IF EXISTS success CASCADE;
 CREATE TABLE success (
-    id_title VARCHAR(255) PRIMARY KEY,
+    id_title VARCHAR(100) PRIMARY KEY,
     gems_reward INTEGER NOT NULL
 );
 
@@ -182,8 +182,8 @@ CREATE TABLE depends (
 -- create table gets -> gets(id_success(PK/FK), id_player(PK/FK))
 DROP TABLE IF EXISTS gets CASCADE;
 CREATE TABLE gets (
-    id_success VARCHAR(255) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_success VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_success) REFERENCES success (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     PRIMARY KEY (id_success, id_player)
@@ -204,9 +204,9 @@ CREATE TABLE battle (
 DROP TABLE IF EXISTS complete CASCADE;
 CREATE TABLE complete (
     id_battle INTEGER NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     id_sand INTEGER NOT NULL,
-    season VARCHAR(255) NOT NULL,
+    season VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_sand) REFERENCES sand (id),
@@ -244,7 +244,7 @@ CREATE TABLE fight (
 -- create table badge -> badge(id_title(PK), image_path)
 DROP TABLE IF EXISTS badge CASCADE;
 CREATE TABLE badge (
-    id_title VARCHAR(255) PRIMARY KEY,
+    id_title VARCHAR(100) PRIMARY KEY,
     image_path VARCHAR(255) NOT NULL
 );
 
@@ -253,7 +253,7 @@ DROP TABLE IF EXISTS win CASCADE;
 CREATE TABLE win (
     id_clan VARCHAR(100) NOT NULL,
     id_battle INTEGER NOT NULL,
-    id_title VARCHAR(255) NOT NULL,
+    id_title VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_battle) REFERENCES clan_battle (clan_battle),
     FOREIGN KEY (id_title) REFERENCES badge (id_title),
@@ -314,7 +314,7 @@ CREATE TABLE requires (
 DROP TABLE IF EXISTS modify CASCADE;
 CREATE TABLE modify (
     id_clan VARCHAR(100) NOT NULL,
-    card_name VARCHAR(255) NOT NULL,
+    card_name VARCHAR(100) NOT NULL,
     name_modifier VARCHAR(100) NOT NULL,
     "level" INTEGER NOT NULL,
     "date" DATE NOT NULL,
@@ -328,7 +328,7 @@ CREATE TABLE modify (
 DROP TABLE IF EXISTS joins CASCADE;
 CREATE TABLE joins (
     id_clan VARCHAR(100) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     id_role INTEGER NOT NULL,
     datetime_in TIMESTAMP NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
@@ -341,7 +341,7 @@ CREATE TABLE joins (
 DROP TABLE IF EXISTS give CASCADE;
 CREATE TABLE give (
     id_clan VARCHAR(100) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     date TIMESTAMP NOT NULL,
     gold INTEGER NOT NULL,
     experience INTEGER NOT NULL,
@@ -353,9 +353,9 @@ CREATE TABLE give (
 -- create table owns -> owns(card(PK/FK), level(PK/FK), player(PK/FK), date_found, date_level_up, experience_ gained)
 DROP TABLE IF EXISTS owns CASCADE;
 CREATE TABLE owns (
-    card VARCHAR(255) NOT NULL,
+    card VARCHAR(100) NOT NULL,
     level INTEGER NOT NULL,
-    player VARCHAR(255) NOT NULL,
+    player VARCHAR(100) NOT NULL,
     date_found DATE NOT NULL,
     date_level_up DATE,
     experience_gained INTEGER NOT NULL,
@@ -369,7 +369,7 @@ CREATE TABLE owns (
 DROP TABLE IF EXISTS accepts CASCADE;
 CREATE TABLE accepts (
     id_mission INTEGER NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     is_completed BOOLEAN NOT NULL,
     FOREIGN KEY (id_mission) REFERENCES mission (id_mission),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
@@ -379,8 +379,8 @@ CREATE TABLE accepts (
 -- create table friend -> friend(id_player1(PK/FK), id_player2(PK/FK))
 DROP TABLE IF EXISTS friend CASCADE;
 CREATE TABLE friend (
-    id_player1 VARCHAR(255) NOT NULL,
-    id_player2 VARCHAR(255) NOT NULL,
+    id_player1 VARCHAR(100) NOT NULL,
+    id_player2 VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_player1) REFERENCES player (id_player),
     FOREIGN KEY (id_player2) REFERENCES player (id_player),
     PRIMARY KEY (id_player1, id_player2)
@@ -408,7 +408,7 @@ CREATE TABLE emoticon (
 DROP TABLE IF EXISTS chest CASCADE;
 CREATE TABLE chest (
     id_chest INTEGER PRIMARY KEY,
-    rarity VARCHAR(255) NOT NULL,
+    rarity VARCHAR(100) NOT NULL,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
     unlocking_time TIMESTAMP NOT NULL,
@@ -419,7 +419,7 @@ CREATE TABLE chest (
 -- create table pays -> pays(id_player(PK/FK), id_credit_card(PK/FK), id_article(PK/FK), datetime, discount)
 DROP TABLE IF EXISTS pays CASCADE;
 CREATE TABLE pays (
-    id_player VARCHAR(255) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     id_credit_card INTEGER NOT NULL,
     id_article INTEGER NOT NULL,
     datetime TIMESTAMP NOT NULL,
@@ -433,21 +433,21 @@ CREATE TABLE pays (
 -- create table buys -> buys(id_shop_name(PK/FK), id_player(PK/FK), id_card_name(PK/FK), datetime)
 DROP TABLE IF EXISTS buys CASCADE;
 CREATE TABLE buys (
-    id_shop_name VARCHAR(255) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
-    id_credit_card BIGINT NOT NULL,
+    id_shop_name VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
+    id_card_name VARCHAR(100)  NOT NULL,
     datetime TIMESTAMP NOT NULL,
     FOREIGN KEY (id_shop_name) REFERENCES shop (id_shop_name),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    FOREIGN KEY (id_credit_card) REFERENCES credit_card (id_credit_card),
+    FOREIGN KEY (id_card_name) REFERENCES card (id_card_name),
     PRIMARY KEY (id_shop_name, id_player, id_credit_card, datetime)
 );
 
 -- create table obtains -> obtains(id_success(PK/FK), id_player(PK/FK))
 DROP TABLE IF EXISTS obtains CASCADE;
 CREATE TABLE obtains (
-    id_success VARCHAR(255) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_success VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_success) REFERENCES success (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     PRIMARY KEY (id_success, id_player)
@@ -500,8 +500,8 @@ CREATE TABLE message (
 -- create table frees -> frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))
 DROP TABLE IF EXISTS frees CASCADE;
 CREATE TABLE frees (
-    id_badge VARCHAR(255) NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
+    id_badge VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
     id_sand INTEGER NOT NULL,
     FOREIGN KEY (id_badge) REFERENCES badge (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
