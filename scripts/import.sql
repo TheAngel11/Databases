@@ -386,6 +386,16 @@ CREATE TABLE complete_aux (
     PRIMARY KEY (id_battle, id_player, id_sand)
 );
 
+DROP TABLE IF EXISTS is_found_aux;
+CREATE table is_found_aux(
+	chest INTEGER,
+	mission INTEGER
+);
+COPY is_found_aux
+FROM '/Users/Shared/BBDD/is_found.csv'
+DELIMITER ','
+CSV HEADER;
+
 -- NOW MIGRATE THE DATA --
 
 -- PLAYER
@@ -580,72 +590,6 @@ FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 INSERT INTO "group"(card_name, id_stack)
 SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
 
--- Shop
-INSERT INTO shop(id_shop_name, available_gems)
-VALUES ('SHOP', random() * (10000 - 25 + 1) + 25);
-
-INSERT INTO friend(id_player1, id_player2)
-SELECT requester, requested
-FROM friends_aux;
-
--- TODO: no hay artículos
-INSERT INTO pays(id_player, id_credit_card, id_article, datetime, discount)
-SELECT pp.player, pp.credit_card, a.id_article, pp.date, pp.discount
-FROM player_purchases_aux AS pp
-JOIN article AS a ON a.times_purchasable = pp.buy_stock;
-
-/*INSERT INTO buys(id_shop_name, id_player, id_credit_card, datetime)
-SELECT s.id_shop_name, pp.player, pp.credit_card, pp.date
-FROM player_purchases_aux AS pp, shop AS s, credit_card AS cc
-WHERE credit_card = cc.number
-GROUP BY s.id_shop_name, pp.player, pp.credit_card, pp.date;*/
-
-INSERT INTO obtains(id_success, id_player)
-SELECT "name", player
-FROM player_achievement_aux;
-
--- TODO: tabla is_found: escoger de manera aleatoria los ID's de chest y de misión.
-
--- hemos quitado el campo gems_contained de la tabla sand_pack
--- TODO: como conectamos esta tabla con article?
-/*INSERT INTO sand_pack(id_sand_pack, id_sand, gold_contained)
-SELECT "id", MAX(arena), MAX(gold)
-FROM sand_pack_aux GROUP BY id;*/
-
--- OJO: hemos puesto el campo id_reply que es el id del mensaje al que se responde.
--- OJO hay que tener dos tablas porque si no hay conflictos con los ids. Y los ids no los podemos autogenerar nosotros porque las referencias de reply se perderían.
-/*DELETE FROM message;
-INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
-SELECT "id", "text", "date", sender, receiver, answer
-FROM message_players_aux;
-
-INSERT INTO "message" (id_message, issue, datetime, id_clan, id_replier, id_reply)
-SELECT "id", "text", "date", sender, receiver, answer
-FROM message_clans_aux;*/
-
--- Article
--- INSERT INTO article(name, real_price, times_purchasable)
--- SELECT pp.pp.buy_cost/pp.buy_stock, pp.buy_stock
--- FROM player_purchases_aux AS pp;
-
-/*INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
-SELECT (a.id_article, pp.bundle_gold, pp.bundle_gems)
-FROM player_purchases_aux AS pp
-JOIN article AS a ON a.times_purchasable = pp.buy_stock
-WHERE pp.bundle_gold > 0 OR pp.bundle_gems > 0;*/
-
-/*INSERT INTO emoticon(id_emoticon, emoticon_name, "path")
-SELECT (a.id_article, pp.emote_name, pp.emote_path)
-FROM player_purchases_aux AS pp
-JOIN article AS a ON a.times_purchasable = pp.buy_stock
-WHERE pp.emote_path != null;
-
-INSERT INTO chest(id_chest, rarity, unlocking_time)
-SELECT (a.id_article, pp.chest_rarity, pp.chest_unlock_time)
-FROM player_purchases_aux AS pp
-JOIN article AS a ON a.times_purchasable = pp.buy_stock
-WHERE pp.chest_rarity != null;*/
-
 --Imports MAR
 
 -- Clan
@@ -824,3 +768,221 @@ WHERE cst.tech is not null
 AND te.mod_radius is not null 
 GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
+
+-- IMPORTS ARNAU
+
+-- Message
+-- aux receiver table for user to user messages
+DROP TABLE IF EXISTS receiver;
+CREATE TABLE receiver(
+	id VARCHAR(255)
+);
+INSERT INTO receiver (id)
+SELECT id_player FROM player;
+
+DELETE FROM message;
+INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
+SELECT mp.id, mp.text, mp.date, mp.sender, mp.receiver, mp.answer
+FROM message_players_aux AS mp
+JOIN player AS p ON p.id_player = sender
+JOIN receiver AS r ON r.id = receiver;
+
+INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
+SELECT mc.id + MAX(mp.id), mc.text, mc.date, mc.sender, mc.receiver, mc.answer + MAX(mp.id)
+FROM message_clans_aux AS mc
+JOIN player AS p ON p.id_player = sender
+JOIN clan AS c ON c.id_clan = receiver,
+message_players_aux AS mp
+GROUP BY mc.id, mc.text, mc.date, mc.sender, mc.receiver, mc.answer; 
+
+-- Shop
+INSERT INTO shop(id_shop_name, available_gems)
+VALUES ('SHOP', random() * (10000 - 25 + 1) + 25);
+
+-- Article
+DELETE FROM article;
+
+-- Sand_pack
+-- auxiliar relation counter
+DROP TABLE IF EXISTS counter;
+CREATE TABLE counter(
+	id_article SERIAL,
+	id_sand_pack INTEGER
+);
+
+INSERT INTO counter (id_sand_pack)
+SELECT pp.arenapack_id
+FROM player_purchases_aux AS pp
+WHERE pp.arenapack_id is not null
+GROUP BY pp.arenapack_id
+ORDER BY pp.arenapack_id ASC;
+
+INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
+SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock), s.id_shop_name 
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.arenapack_id is not null
+GROUP BY pp.arenapack_id, s.id_shop_name
+ORDER BY pp.arenapack_id ASC;
+
+-- hemos quitado el campo gems_contained de la tabla sand_pack
+DELETE FROM sand_pack;
+INSERT INTO sand_pack (id_sand_pack)
+SELECT id_article
+FROM counter
+ORDER BY id_article ASC;
+
+DELETE FROM belongs;
+INSERT INTO belongs (id_sand_pack, id_sand, gold_contained)
+SELECT c.id_article, sp.arena, sp.gold
+FROM sand_pack_aux AS sp,
+counter AS c
+WHERE c.id_sand_pack = sp.id;
+
+DROP TABLE IF EXISTS counter;
+
+-- Bundle
+DROP TABLE IF EXISTS counter;
+CREATE TABLE counter(
+	id_article SERIAL,
+	num_sand_pack INTEGER,
+	buy_cost FLOAT,
+	gold INTEGER,
+	gems INTEGER
+);
+
+INSERT INTO counter (num_sand_pack, buy_cost, gold, gems)
+SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.bundle_gold, pp.bundle_gems
+FROM player_purchases_aux AS pp,
+article AS a
+WHERE pp.bundle_gold is not null
+GROUP BY pp.buy_cost, pp.bundle_gold, pp.bundle_gems
+ORDER BY pp.buy_cost ASC;
+
+INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
+SELECT DISTINCT 'BUNDLE', pp.buy_cost, pp.buy_stock, s.id_shop_name 
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.bundle_gold is not null
+ORDER BY pp.buy_cost ASC;
+
+DELETE FROM bundle;
+INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
+SELECT id_article + num_sand_pack, gold, gems
+FROM counter
+ORDER BY id_article ASC;
+
+-- Emoticon
+DROP TABLE IF EXISTS counter;
+CREATE TABLE counter(
+	id_article SERIAL,
+	num_articles INTEGER,
+	buy_cost FLOAT,
+	path VARCHAR(255)
+);
+
+INSERT INTO counter (num_articles, buy_cost, path)
+SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.emote_path
+FROM player_purchases_aux AS pp,
+article AS a
+WHERE pp.emote_name is not null
+AND pp.emote_path is not null
+GROUP BY pp.buy_cost, pp.emote_path
+ORDER BY pp.buy_cost ASC;
+
+INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
+SELECT DISTINCT pp.emote_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.emote_name is not null
+AND pp.emote_path is not null
+ORDER BY pp.buy_cost ASC;
+
+DELETE FROM emoticon;
+INSERT INTO emoticon(id_emoticon, path)
+SELECT id_article + num_articles, path
+FROM counter
+ORDER BY id_article ASC;
+
+-- Chest
+DROP TABLE IF EXISTS counter;
+CREATE TABLE counter(
+	id_article SERIAL,
+	num_articles INTEGER,
+	buy_cost FLOAT,
+	chest_rarity VARCHAR(255),
+	chest_unlock_time INTEGER,
+	chest_num_cards VARCHAR(255)
+);
+
+INSERT INTO counter (num_articles, buy_cost, chest_rarity, chest_unlock_time, chest_num_cards)
+SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
+FROM player_purchases_aux AS pp,
+article AS a
+WHERE pp.chest_rarity is not null
+AND pp.chest_name is not null
+AND pp.chest_unlock_time is not null
+AND pp.chest_num_cards is not null
+GROUP BY pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
+ORDER BY pp.buy_cost ASC;
+
+INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
+SELECT DISTINCT pp.chest_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.chest_name is not null
+AND pp.chest_rarity is not null
+AND pp.chest_unlock_time is not null
+AND pp.chest_num_cards is not null
+ORDER BY pp.buy_cost ASC;
+
+DELETE FROM chest;
+INSERT INTO chest(id_chest, rarity, unlocking_time, gold_contained, gems_contained)
+SELECT id_article + num_articles, chest_rarity, chest_unlock_time, random() * (1000 - 25 + 1) + 25, random() * (5 - 25 + 1) + 25
+FROM counter
+ORDER BY id_article ASC;
+
+-- Reward
+DELETE FROM reward;
+INSERT INTO reward (id_reward, trophies_needed)
+SELECT DISTINCT id_reward, MAX(trophies_needed)
+FROM reward_aux
+GROUP BY id_reward;
+
+-- Friend
+DELETE FROM friend;
+INSERT INTO friend(id_player1, id_player2)
+SELECT requester, requested
+FROM friends_aux
+JOIN player AS p ON p.id_player = requester
+JOIN receiver AS r ON r.id = requested;
+
+DROP TABLE IF EXISTS receiver;
+
+-- Obtains
+DELETE FROM obtains;
+INSERT INTO obtains(id_success, id_player)
+SELECT pa.name, pa.player
+FROM player_achievement_aux AS pa
+JOIN player AS p ON p.id_player = pa.player
+JOIN success AS s ON s.id_title = pa.name;
+
+-- Is found
+DELETE FROM is_found;
+INSERT INTO is_found(id_chest, id_mission)
+SELECT DISTINCT chest, mission
+FROM is_found_aux;
+
+-- Pays
+/*DELETE FROM pays;
+INSERT INTO pays(id_player, id_credit_card, datetime, discount)
+SELECT DISTINCT pp.player, pp.credit_card, pp.date, pp.discount
+FROM player_purchases_aux AS pp
+JOIN player AS p ON p.id_player = pp.player
+JOIN credit_card AS cc ON cc.number = pp.credit_card;*/
+
+-- Buys
+DELETE FROM buys;
+INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
+SELECT s.id_shop_name, '#LVRUV8YV', 'Knight', '2022-1-14 21:19:00'
+FROM shop AS s;
