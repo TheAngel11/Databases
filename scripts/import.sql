@@ -450,11 +450,19 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
 
+--Clan_battle
+DELETE FROM clan_battle;
+INSERT INTO clan_battle(clan_battle, start_date, end_date)
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
+FROM clan_battle_aux AS cb 
+GROUP BY cb.battle, cb.start_date, cb.end_date;
+
+
+
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
-
-INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) 
-SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int 
+INSERT INTO battle(datetime, duration, points, trophies_played, gold_played, clan_battle) 
+SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int, clan_battle
 FROM battle_aux;
 
 
@@ -613,26 +621,9 @@ SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.da
 FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
---CLan_battle
-DELETE FROM clan_battle;
-INSERT INTO clan_battle(clan_battle, start_date, end_date)
-SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
-FROM clan_battle_aux AS cb
-GROUP BY cb.battle, cb.start_date, cb.end_date;
-
 --Fight
 DELETE FROM fight;
-INSERT INTO fight(clan_battle, battle)
-SELECT cb.battle, ba.id_battle
-FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle= b.clan_battle
-, battle AS ba
-WHERE b.duration = ba.duration
-AND b.date = ba.datetime
-GROUP BY cb.battle, ba.id_battle;
-
---Battle_clan
-DELETE FROM battle_clan;
-INSERT INTO battle_clan(id_clan,clan_battle)
+INSERT INTO fight(id_clan,clan_battle)
 SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
 -- Win
