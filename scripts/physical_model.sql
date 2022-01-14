@@ -285,7 +285,6 @@ DROP TABLE IF EXISTS technology CASCADE;
 CREATE TABLE technology (
     name_technology VARCHAR(100) PRIMARY KEY,
     max_level INTEGER NOT NULL,
-    actual_level INTEGER,
 	FOREIGN KEY (name_technology) REFERENCES modifier (name_modifier)	
 );
 
