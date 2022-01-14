@@ -193,7 +193,7 @@ DROP TABLE IF EXISTS  clan_battle CASCADE;
 CREATE TABLE clan_battle (
     clan_battle INTEGER NOT NULL PRIMARY KEY,
 	start_date DATE NOT NULL,
-	end_date DATE NOT NULL	
+	end_date DATE NOT NULL
 );
 
 -- create table battle -> battle(id_battle(PK), datetime, duration, points, trophies_played, gold_played)
@@ -215,12 +215,13 @@ CREATE TABLE complete (
     id_battle INTEGER NOT NULL,
     id_player VARCHAR(100) NOT NULL,
     id_sand INTEGER NOT NULL,
+    datetime DATE NOT NULL,
     season VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (season) REFERENCES season (id_name),
-    PRIMARY KEY (id_battle, id_player, id_sand)
+    PRIMARY KEY (id_battle, id_player, id_sand, datetime)
 ); 
 
 
@@ -432,7 +433,7 @@ CREATE TABLE buys (
     FOREIGN KEY (id_shop_name) REFERENCES shop (id_shop_name),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_card_name) REFERENCES card (id_card_name),
-    PRIMARY KEY (id_shop_name, id_player, id_credit_card, datetime)
+    PRIMARY KEY (id_shop_name, id_player, id_card_name, datetime)
 );
 
 -- create table obtains -> obtains(id_success(PK/FK), id_player(PK/FK))
