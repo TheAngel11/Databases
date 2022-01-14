@@ -447,7 +447,8 @@ INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) SEL
 -- RARITY
 DELETE FROM rarity;
 INSERT INTO rarity(degree, multiplicative_factor)
-SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux GROUP BY rarity;
+SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux
+GROUP BY rarity;
 
 -- CARD
 DELETE FROM card;
@@ -462,9 +463,9 @@ WHERE card.lifetime IS NOT NULL;
 
 -- TROOP
 DELETE FROM troop;
-INSERT INTO troop (troop_name, spawn_damage)
-SELECT name, spawn_damage FROM card_aux AS card
-WHERE card.spawn_damage IS NOT NULL;
+    INSERT INTO troop (troop_name, spawn_damage)
+    SELECT name, spawn_damage FROM card_aux AS card
+    WHERE card.spawn_damage IS NOT NULL;
 
 -- ENCHANTMENT
 DELETE FROM enchantment;
@@ -480,10 +481,9 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
 SELECT  deck, title, date, description, player FROM player_deck GROUP BY deck, title, date, description, player;
 
--- OWNS (TODO)
 -- OWNS
-/*INSERT INTO owns(card, level, player, date_found, date_level_up, experience_gained)
-SELECT c.name, level, player, date, GENERATE DATE HERE, random() * (10000 - 25 + 1) + 25 FROM player_card_aux, card_aux AS c;*/
+INSERT INTO owns(card, level, player, date_found, date_level_up, experience_gained)
+SELECT c.name, level, player, 'now', date, random() * (10000 - 25 + 1) + 25 FROM player_card, card_aux AS c;
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
