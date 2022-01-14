@@ -442,7 +442,8 @@ INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_
 -- That is made by the GROUP BY statement.
 DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
-
+--Badge de clan
+INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
@@ -455,7 +456,7 @@ INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.ar
 INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) 
 SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int 
 FROM battle_aux;
---INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
+
 
 -- Complete
 -- Explanation: we are importing the data from a csv.
@@ -612,12 +613,14 @@ SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.da
 FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
+--CLan_battle
 DELETE FROM clan_battle;
 INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
 FROM clan_battle_aux AS cb
 GROUP BY cb.battle, cb.start_date, cb.end_date;
 
+--Fight
 DELETE FROM fight;
 INSERT INTO fight(clan_battle, battle)
 SELECT cb.battle, ba.id_battle
@@ -627,15 +630,16 @@ WHERE b.duration = ba.duration
 AND b.date = ba.datetime
 GROUP BY cb.battle, ba.id_battle;
 
+--Battle_clan
 DELETE FROM battle_clan;
 INSERT INTO battle_clan(id_clan,clan_battle)
 SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
 -- Win
-/*-- Nou CSV
+-- Nou CSV
 INSERT INTO win(id_clan, id_battle, id_title)
 SELECT cb.clan, cb.battle, cb.badge
-FROM clan_badge_aux AS cb;*/
+FROM clan_badge_aux AS cb;
 
 -- Modifier
 DELETE FROM modifier;
