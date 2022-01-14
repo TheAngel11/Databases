@@ -373,6 +373,19 @@ CSV HEADER;
 
 ALTER TABLE clan_badge_aux ALTER COLUMN battle TYPE INTEGER USING battle::integer;
 
+DROP TABLE IF EXISTS complete_aux CASCADE;
+CREATE TABLE complete_aux (
+    id_battle INTEGER NOT NULL,
+    id_player VARCHAR(255) NOT NULL,
+    id_sand INTEGER NOT NULL,
+    season VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
+    FOREIGN KEY (id_player) REFERENCES player (id_player),
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
+    FOREIGN KEY (season) REFERENCES season (id_name),
+    PRIMARY KEY (id_battle, id_player, id_sand)
+);
+
 -- NOW MIGRATE THE DATA --
 
 -- PLAYER
@@ -442,6 +455,7 @@ INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_
 -- That is made by the GROUP BY statement.
 DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
+
 --Badge de clan
 INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM clan_badge_aux AS cb;
 
@@ -450,22 +464,73 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
 
+--Clan_battle
+DELETE FROM clan_battle;
+INSERT INTO clan_battle(clan_battle, start_date, end_date)
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
+FROM clan_battle_aux AS cb 
+GROUP BY cb.battle, cb.start_date, cb.end_date;
+
+
+
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
-
-INSERT INTO battle(datetime, duration, points, trophies_played, gold_played) 
-SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int 
+INSERT INTO battle(datetime, duration, points, trophies_played, gold_played, clan_battle) 
+SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int, clan_battle
 FROM battle_aux;
 
 
 -- Complete
 -- Explanation: we are importing the data from a csv.
-COPY complete
-FROM '/Users/Shared/BBDD/complete.csv'
-DELIMITER ','
-CSV HEADER;
 
--- Imports Angel
+-- Union between battle and battle_aux (id's)
+SELECT id_battle, winner, loser, battle.duration, datetime, points, winner_score, loser_score FROM battle, battle_aux WHERE battle.duration = battle_aux.duration AND battle.datetime = battle_aux.date;
+
+-- winners
+SELECT id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score
+FROM battle, battle_aux, player_deck_aux
+WHERE battle.duration = battle_aux.duration
+        AND battle.datetime = battle_aux.date
+        AND (battle_aux.winner = player_deck_aux.deck OR battle_aux.loser = player_deck_aux.deck)
+GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score;
+
+-- losers
+SELECT id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score
+FROM battle, battle_aux, player_deck_aux
+WHERE battle.duration = battle_aux.duration
+        AND battle.datetime = battle_aux.date
+        AND battle_aux.loser = player_deck_aux.deck
+GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score;
+
+
+-- losers reduced
+DROP TABLE IF EXISTS complete_aux;
+CREATE TABLE complete_aux (
+    id_battle INTEGER,
+    id_player VARCHAR(255)
+);
+
+INSERT INTO complete_aux (id_battle, id_player)
+SELECT id_battle, player AS id_player
+FROM battle, battle_aux, player_deck_aux
+WHERE battle.duration = battle_aux.duration
+    AND battle.datetime = battle_aux.date
+    AND (battle_aux.loser = player_deck_aux.deck OR battle_aux.winner = player_deck_aux.deck)
+GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points;
+
+-- Alter creating a new column called "id_sand" in losers_reduced
+ALTER TABLE complete_aux ADD COLUMN id_sand INTEGER;
+ALTER TABLE complete_aux ADD COLUMN id_season VARCHAR(100);
+ALTER TABLE complete_aux ADD COLUMN datetime DATE;
+
+-- Fill id_sand with random values between 54000000 and 54000058
+UPDATE complete_aux SET id_sand = floor(random()*(54000058-54000000+1))+54000000;
+UPDATE complete_aux SET id_season = 'T' || floor(random() * 9 + 1)::int;
+UPDATE complete_aux SET datetime = date_trunc('day', now() - (random() * (now() - '2018-01-01')::interval));
+
+DELETE FROM complete;
+INSERT INTO complete(id_battle, id_player, id_sand, season, datetime) SELECT id_battle, id_player, complete_aux.id_sand, id_season, complete_aux.datetime FROM complete_aux;
+SELECT * FROM complete;
 
 -- RARITY
 DELETE FROM rarity;
@@ -505,7 +570,6 @@ INSERT INTO stack(id_stack, name, creation_date, description, id_player)
 SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY deck, title, date, description, player;
 
 -- OWNS
-
 DELETE FROM owns;
 INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gained)
 SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
@@ -515,8 +579,6 @@ FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
 SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
-
--- Imports Arnau
 
 -- Shop
 INSERT INTO shop(id_shop_name, available_gems)
@@ -613,26 +675,9 @@ SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.da
 FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
---CLan_battle
-DELETE FROM clan_battle;
-INSERT INTO clan_battle(clan_battle, start_date, end_date)
-SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
-FROM clan_battle_aux AS cb
-GROUP BY cb.battle, cb.start_date, cb.end_date;
-
 --Fight
 DELETE FROM fight;
-INSERT INTO fight(clan_battle, battle)
-SELECT cb.battle, ba.id_battle
-FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle= b.clan_battle
-, battle AS ba
-WHERE b.duration = ba.duration
-AND b.date = ba.datetime
-GROUP BY cb.battle, ba.id_battle;
-
---Battle_clan
-DELETE FROM battle_clan;
-INSERT INTO battle_clan(id_clan,clan_battle)
+INSERT INTO fight(id_clan,clan_battle)
 SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
 -- Win

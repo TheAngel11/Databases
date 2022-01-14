@@ -39,9 +39,9 @@ FROM card AS c JOIN
 --Seleccionar el nombre de cartes que hi ha en una pila
 
 
---CLAN
+----------------- CLAN -----------------
 
---Caracteristiques de clan
+--COnsulta 1: Caracteristiques de clan
 --Model fisic
 SELECT cl.id_clan, cl.clan_name, cl.num_trophy AS trophies, 
 COUNT(DISTINCT j.id_player) AS total_players, 
@@ -49,7 +49,6 @@ SUM(g.gold) AS total_gold_donation
 FROM clan AS cl JOIN joins AS j ON cl.id_clan = j.id_clan
 JOIN give AS g ON cl.id_clan = g.id_clan
 GROUP BY cl.id_clan;
-
 
 --Model CSV
 SELECT ca.tag, ca.name, ca.trophies, 
@@ -59,7 +58,8 @@ FROM clan_aux AS ca JOIN player_clan_aux AS pc ON ca.tag = pc.clan
 JOIN player_clan_donation AS pcd ON pc.clan = pcd.clan
 GROUP BY ca.tag, ca.name, ca.trophies;
 
---Role
+
+--Consulta 2: Rol
 --Model fisic
 SELECT j.id_clan, ro.id_role, COUNT(j.id_player) AS total_players, ro.description 
 FROM joins AS j JOIN role AS ro ON j.id_role = ro.id_role
@@ -75,7 +75,8 @@ ORDER BY pc.clan
 LIMIT 4;
 
 
---CONSULT 3: donacions
+--Consulta 3: Donacions
+--Model fisic
 SELECT g.id_clan,  COUNT(g.id_player) AS total_players, SUM(g.gold) AS gold
 FROM give AS g 
 GROUP BY g.id_clan
@@ -87,17 +88,64 @@ FROM player_clan_donation AS pcd
 GROUP BY pcd.clan
 ORDER BY pcd.clan;
 
---Consulta 4:
-SELECT m.id_clan, te.name_technology,mo.effect_radius
-FROM modify AS m JOIN troop AS tro ON m.card_name = tro.troop_name
+--Consulta 4: Info modificador tecnologies
+--Model fisic
+SELECT DISTINCT m.id_clan, te.name_technology AS modifier_tech, mo.damage, 
+mo.attack_speed, mo.effect_radius
+FROM modify AS m JOIN enchantment AS en ON m.card_name = en.enchantment_name
 JOIN technology AS te ON te.name_technology = m.name_modifier
 JOIN modifier AS mo ON mo.name_modifier = m.name_modifier
-GROUP BY m.id_clan, te.name_technology, mo.effect_radius
-ORDER BY m.id_clan;
+ORDER BY m.id_clan ASC, te.name_technology ASC;
 
-SELECT cst.clan, cst.tech,te.mod_radius
-FROM clan_tech_structure_aux AS cst JOIN technology_aux AS te
+--Model CSV
+SELECT DISTINCT cst.clan, cst.tech, te.mod_damage, te.mod_hit_speed ,te.mod_radius
+FROM clan_tech_structure_aux AS cst JOIN technology_aux AS te 
 ON cst.tech = te.technology
 WHERE tech is not null
 AND te.mod_radius is not null
-ORDER BY cst.clan;
+ORDER BY cst.clan ASC, cst.tech ASC;
+
+--Consulta 5: Total de modificadors
+--Model fisic
+SELECT m.id_clan, COUNT(DISTINCT te.name_technology) AS technology
+FROM modify AS m JOIN technology AS te ON te.name_technology = m.name_modifier
+GROUP BY m.id_clan
+ORDER BY m.id_clan ASC;
+
+SELECT m.id_clan, COUNT(DISTINCT st.name_structure) AS structure
+FROM modify AS m JOIN structure AS st ON st.name_structure = m.name_modifier
+GROUP BY m.id_clan
+ORDER BY m.id_clan ASC;
+
+--Model CSV
+SELECT cst.clan, COUNT(cst.tech) AS tech, COUNT(cst.structure) AS structure
+FROM clan_tech_structure_aux AS cst
+GROUP BY cst.clan
+ORDER BY cst.clan ASC;
+
+
+-------- BATALLA  ------------
+--Consulta 1
+--Model fisic
+SELECT cb.clan_battle, cb.start_date, cb.end_date, bat.id_battle, bat.duration
+FROM clan_battle AS cb JOIN battle AS bat ON bat.clan_battle = cb.clan_battle
+ORDER BY cb.clan_battle, bat.duration ASC;
+
+--Model CSV
+SELECT DISTINCT cb.battle, cb.start_date, cb.end_date, b.duration
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle = b.clan_battle
+ORDER BY cb.battle, b.duration ASC;
+
+--Consulta 2
+--Model fisic
+SELECT cb.clan_battle, f.id_clan, COUNT(bat.id_battle) AS battles
+FROM clan_battle AS cb JOIN fight AS f ON cb.clan_battle = f.clan_battle
+JOIN battle AS bat ON bat.clan_battle = cb.clan_battle
+GROUP BY cb.clan_battle,f.id_clan
+ORDER BY cb.clan_battle, f.id_clan;
+
+--Model CSV
+SELECT DISTINCT cb.battle, cb.clan, COUNT(b.clan_battle) AS battles
+FROM clan_battle_aux AS cb JOIN battle_aux AS b ON cb.battle = b.clan_battle
+GROUP BY cb.battle, cb.clan
+ORDER BY cb.battle, cb.clan;
