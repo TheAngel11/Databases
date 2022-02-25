@@ -1,3 +1,4 @@
+# ANGEL
 😎 rarity(degree(PK), multiplicative_factor)
 😎 card(card_name(PK), damage, attack_speed, rarity(FK), id_sand(FK))
 😎 building(building_name(PK), life)
@@ -8,6 +9,7 @@
 😎 level(level(PK), statistics_multiplier, improvement_cost)
 😎 owns(card(PK/FK), level(PK/FK), player(PK/FK), date_found, date_level_up, experience_ gained)
 
+# MAR
 😎 clan(id_clan(PK), description, num_trophy, num_min_trophy, total_points, id_player(FK), gold_needed, datetime)
 😈 give(id_clan(PK/FK), id_player(PK/FK), gold, experience)
 😈 role(id_role(PK), description)
@@ -23,6 +25,7 @@
 😈 requires(id_technology1(PK/FK), id_technology2(PK/FK), previous_level)
 😈 modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
 
+# PETER
 🚀 sand(id_title(PK), max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 🚀 *complete(id_battle(PK/FK), id_player(PK/FK), id_sand(PK/FK), victories_count, defeat_count, points_count, season(FK))
 🚀 season(id_name(PK), start_date, end_date)id
@@ -33,6 +36,7 @@
 🚀 depends(id_mission_1(PK/FK), id_mission_2(PK/FK))
 🚀 frees(id_badge(PK/FK), id_player(PK/FK), id_sand(FK))
 
+# ARNAU
 😎 player(id_player(PK), name, exp, trophies, gold, gems)
 ✅ message(id_message(PK), title, issue, datetime, id_owner(PK), id_clan(FK), id_replier(FK))
 🚀 credit_card(id_credit_card(PK), datetime, number)
