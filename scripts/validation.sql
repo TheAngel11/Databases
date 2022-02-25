@@ -1,67 +1,114 @@
---CARD
+-----CARD-----
 
 --Model físic
 
 --Numero de buildings, enchantment i tropes totals
-SELECT c.id_card_name AS card, 
-COUNT(b.building_name) AS num_buildings, 
-COUNT(enchantment) AS num_enchantments,
-COUNT(troop) AS num_troops
-FROM card AS c JOIN building AS b ON c.id_card_name = b.building_name
-JOIN enchantment AS e ON c.id_card_name = e.enchantment_name
-JOIN troop AS t ON c.id_card_name = t.troop_name;
+SELECT COUNT(DISTINCT b.building_name) AS num_buildings,
+COUNT(DISTINCT e.enchantment_name) AS num_enchantments,
+COUNT(DISTINCT t.troop_name) AS num_troops
+FROM building AS b,
+enchantment AS e,
+troop AS t;
 
---Seleccionar totes les cartes d'una certa raresa
+
+--Seleccionar totes les cartes ordenades per raresa
 SELECT c.id_card_name AS card, c.rarity AS rarity
-FROM card AS c JOIN 
---Seleccionar totes les cartes d'un jugador d'un nivell en concret
+FROM card AS c JOIN rarity AS r ON c.rarity = r.degree
+GROUP BY c.id_card_name, rarity
+ORDER BY rarity;
 
---Seleccionar el nombre de cartes que hi ha en una pila
+--Seleccionar les cartes d'un jugador una per una amb cartes de nivell major a 5
+SELECT c.id_card_name AS card, p.id_player AS player, l.level AS level
+FROM card AS c JOIN owns AS o ON c.id_card_name =  o.card
+JOIN player AS p ON p.id_player = o.player
+JOIN level AS l ON l.level = o.level
+GROUP BY c.id_card_name , p.id_player, l.level HAVING l.level > 5
+ORDER BY c.id_card_name;
 
 --Seleccionar quantes piles te un jugador
-
---Model Csv
+SELECT COUNT(DISTINCT s.id_stack) AS num_stacks
+FROM stack AS s JOIN player AS p ON s.id_player = p.id_player;
+--GROUP BY p.id_player
+--ORDER BY p.id_player;
+    -- Model Csv --
 
 --Numero de buildings, enchantment i tropes totals
-SELECT c.id_card_name AS card_aux, 
-COUNT(c.buildings) AS num_buildings, 
-COUNT(c.enchantment) AS num_enchantments,
-COUNT(c.troop) AS num_troops
-FROM card AS c JOIN building AS b ON c.id_card_name = b.building_name
-JOIN enchantment AS e ON c.id_card_name = e.enchantment_name
-JOIN troop AS t ON c.id_card_name = t.troop_name;
+--num buildings
+SELECT COUNT(DISTINCT c.name) AS num_buildings
+FROM card_aux AS c
+WHERE lifetime IS NOT NULL;
+
+--num enchantments
+SELECT COUNT(DISTINCT c.name) AS num_enchantments
+FROM card_aux AS c
+WHERE radious IS NOT NULL;
+
+--num troops
+SELECT COUNT(DISTINCT c.name) AS num_troops
+FROM card_aux AS c
+WHERE spawn_damage IS NOT NULL;
+
+-- SYNTAX ERROR
+-- COUNT(DISTINCT e.enchantment_name) AS num_enchantments
+-- COUNT(DISTINCT t.troop_name) AS num_troops
+-- FROM c AS b
+-- , enchantment AS e
+-- , troop AS t;
 
 --Seleccionar totes les cartes d'una certa raresa
-SELECT c.id_card_name AS card, c.rarity AS rarity
-FROM card AS c JOIN 
---Seleccionar totes les cartes d'un jugador d'un nivell en concret
+SELECT c.name AS card, c.rarity AS rarity
+FROM card_aux AS c
+GROUP BY c.name, c.rarity
+ORDER BY rarity;
+--Seleccionar les cartes d'un jugador una per una amb cartes de nivell major a 5
+SELECT c.name AS card, p.tag AS tag, p_c.level AS level
+FROM card_aux AS c JOIN player_card_aux AS p_c ON p_c.name = c.name
+JOIN player_aux AS p ON p_c.player = p.tag
+GROUP BY c.name, tag, level HAVING level > 5
+ORDER BY card;
 
---Seleccionar el nombre de cartes que hi ha en una pila
+-----PLAYER------
+    -- Model Fisic --
+--Selecciona els jugadors amb més de 5 piles
+
+--Caracteristiques de Jugador
+SELECT p.id_player AS player, p.name, p.exp, p.trophies, p.gold, p.gems
+FROM player AS p
+ORDER BY player;
+
+
+
+    -- Model Csv --
+
+--Caracteristiques de Jugador
+SELECT p.tag, p.name, p.experience, p.trophies
+FROM player_aux AS p
+ORDER BY p.tag;
 
 
 ----------------- CLAN -----------------
 
 --COnsulta 1: Caracteristiques de clan
 --Model fisic
-SELECT cl.id_clan, cl.clan_name, cl.num_trophy AS trophies, 
-COUNT(DISTINCT j.id_player) AS total_players, 
+SELECT cl.id_clan, cl.clan_name, cl.num_trophy AS trophies,
+COUNT(DISTINCT j.id_player) AS total_players,
 SUM(g.gold) AS total_gold_donation
 FROM clan AS cl JOIN joins AS j ON cl.id_clan = j.id_clan
 JOIN give AS g ON cl.id_clan = g.id_clan
 GROUP BY cl.id_clan;
 
 --Model CSV
-SELECT ca.tag, ca.name, ca.trophies, 
-COUNT(DISTINCT pc.player)AS total_players, 
+SELECT ca.tag, ca.name, ca.trophies,
+COUNT(DISTINCT pc.player)AS total_players,
 SUM(pcd.gold) AS total_gold_donation
-FROM clan_aux AS ca JOIN player_clan_aux AS pc ON ca.tag = pc.clan
-JOIN player_clan_donation AS pcd ON pc.clan = pcd.clan
+FROM clans_aux AS ca JOIN player_clan_aux AS pc ON ca.tag = pc.clan
+JOIN player_clan_donation_aux AS pcd ON pc.clan = pcd.clan
 GROUP BY ca.tag, ca.name, ca.trophies;
 
 
 --Consulta 2: Rol
 --Model fisic
-SELECT j.id_clan, ro.id_role, COUNT(j.id_player) AS total_players, ro.description 
+SELECT j.id_clan, ro.id_role, COUNT(j.id_player) AS total_players, ro.description
 FROM joins AS j JOIN role AS ro ON j.id_role = ro.id_role
 GROUP BY j.id_clan, ro.id_role, ro.description
 ORDER BY j.id_clan, ro.id_role ASC
@@ -78,19 +125,19 @@ LIMIT 4;
 --Consulta 3: Donacions
 --Model fisic
 SELECT g.id_clan,  COUNT(g.id_player) AS total_players, SUM(g.gold) AS gold
-FROM give AS g 
+FROM give AS g
 GROUP BY g.id_clan
 ORDER BY g.id_clan;
 
 --Model CSV
 SELECT pcd.clan, COUNT(pcd.player) AS total_players, SUM(pcd.gold) AS gold
-FROM player_clan_donation AS pcd
+FROM player_clan_donation_aux AS pcd
 GROUP BY pcd.clan
 ORDER BY pcd.clan;
 
 --Consulta 4: Info modificador tecnologies
 --Model fisic
-SELECT DISTINCT m.id_clan, te.name_technology AS modifier_tech, mo.damage, 
+SELECT DISTINCT m.id_clan, te.name_technology AS modifier_tech, mo.damage,
 mo.attack_speed, mo.effect_radius
 FROM modify AS m JOIN enchantment AS en ON m.card_name = en.enchantment_name
 JOIN technology AS te ON te.name_technology = m.name_modifier
@@ -99,7 +146,7 @@ ORDER BY m.id_clan ASC, te.name_technology ASC;
 
 --Model CSV
 SELECT DISTINCT cst.clan, cst.tech, te.mod_damage, te.mod_hit_speed ,te.mod_radius
-FROM clan_tech_structure_aux AS cst JOIN technology_aux AS te 
+FROM clan_tech_structure_aux AS cst JOIN technology_aux AS te
 ON cst.tech = te.technology
 WHERE tech is not null
 AND te.mod_radius is not null
@@ -208,3 +255,116 @@ SELECT * FROM complete WHERE id_player = '#CQG8R8UV';
 SELECT * FROM success INNER JOIN gets g ON success.id_title = g.id_success
     INNER JOIN player p ON g.id_player = p.id_player
 WHERE g.id_player = '#2Q9JG29RL';
+
+------------ FRIENDS -----------
+-- Consulta 2: Demostra les amistats dels jugadors
+-- Model físic
+SELECT * FROM friend
+LIMIT 5;
+
+SELECT * FROM friend
+ORDER BY id_player1 ASC
+LIMIT 5;
+
+-- Model CSV
+SELECT * FROM friends_aux
+ORDER BY requester ASC
+LIMIT 5;
+
+-- Comprovació jugadors existents
+SELECT * FROM player WHERE id_player = '#Q0CVCRQR';
+SELECT * FROM player WHERE id_player = '#202C2CU0U';
+
+
+------------ SHOP -----------
+-- Model físic
+SELECT * FROM shop;
+
+------------ ARTICLES -----------
+--- Model físic (ARTICLES)
+SELECT id_article, name, real_price, times_purchasable, id_shop_name
+FROM article
+ORDER BY id_article ASC;
+
+--- Model CSV (SAND_PACK)
+SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock),s.id_shop_name
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.arenapack_id is not null
+GROUP BY pp.arenapack_id, s.id_shop_name
+ORDER BY pp.arenapack_id ASC
+LIMIT 8;
+
+--- Model físic (SAND_PACK)
+SELECT id_sand_pack
+FROM sand_pack
+ORDER BY id_sand_pack ASC
+LIMIT 8;
+
+--- Model CSV (BUNDLE)
+SELECT DISTINCT 'BUNDLE', pp.buy_cost, pp.buy_stock, s.id_shop_name
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.bundle_gold is not null
+ORDER BY pp.buy_cost ASC
+LIMIT 8;
+
+--- Model físic (BUNDLE)
+SELECT id_bundle, gold_contained, gems_contained
+FROM bundle
+ORDER BY id_bundle ASC
+LIMIT 8;
+
+--- Model CSV (EMOTICONA)
+SELECT DISTINCT pp.emote_name, pp.buy_cost, pp.buy_stock, s.id_shop_name
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.emote_name is not null
+AND pp.emote_path is not null
+ORDER BY pp.buy_cost ASC
+LIMIT 8;
+
+--- Model físic (EMOTICONA)
+SELECT id_emoticon, path
+FROM emoticon
+ORDER BY id_emoticon ASC
+LIMIT 8;
+
+--- Model CSV (CHEST)
+SELECT DISTINCT pp.chest_name, pp.buy_cost, pp.buy_stock, s.id_shop_name
+FROM player_purchases_aux AS pp,
+shop AS s
+WHERE pp.chest_name is not null
+AND pp.chest_rarity is not null
+AND pp.chest_num_cards is not null
+ORDER BY pp.buy_cost ASC
+LIMIT 8;
+
+--- Model físic (CHEST)
+SELECT id_chest, rarity, unlocking_time, gold_contained, gems_contained
+FROM chest
+ORDER BY id_chest ASC
+LIMIT 8;
+
+--- Subentities at super-entity
+SELECT * FROM article AS a
+WHERE a.name = 'SAND_PACK'
+LIMIT 8;
+
+SELECT * FROM article AS a
+WHERE a.name = 'BUNDLE'
+LIMIT 8;
+
+SELECT * FROM article AS a
+WHERE a.name LIKE '%Emote%'
+LIMIT 8;
+
+SELECT * FROM article AS a
+WHERE a.name LIKE '%Chest%'
+LIMIT 8;
+
+--- Irregularitat explicada per els preus
+SELECT pp.arenapack_id, pp.buy_cost, pp.buy_stock
+FROM player_purchases_aux AS pp
+WHERE pp.arenapack_id = '83'
+LIMIT 8;

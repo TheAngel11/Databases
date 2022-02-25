@@ -853,18 +853,22 @@ DELETE FROM article;
 DROP TABLE IF EXISTS counter;
 CREATE TABLE counter(
 	id_article SERIAL,
-	id_sand_pack INTEGER
+	id_sand_pack INTEGER,
+	max_article INTEGER
 );
 
-INSERT INTO counter (id_sand_pack)
-SELECT pp.arenapack_id
-FROM player_purchases_aux AS pp
+INSERT INTO counter (id_sand_pack, max_article)
+SELECT pp.arenapack_id, MAX(a.id_article)
+FROM player_purchases_aux AS pp,
+article AS a
 WHERE pp.arenapack_id is not null
-GROUP BY pp.arenapack_id
+GROUP BY pp.arenapack_id, a.id_article
 ORDER BY pp.arenapack_id ASC;
 
+DELETE FROM article;
+
 INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
-SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock), s.id_shop_name 
+SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock), s.id_shop_name
 FROM player_purchases_aux AS pp,
 shop AS s
 WHERE pp.arenapack_id is not null
@@ -874,13 +878,13 @@ ORDER BY pp.arenapack_id ASC;
 -- hemos quitado el campo gems_contained de la tabla sand_pack
 DELETE FROM sand_pack;
 INSERT INTO sand_pack (id_sand_pack)
-SELECT id_article
+SELECT id_article + max_article
 FROM counter
 ORDER BY id_article ASC;
 
 DELETE FROM belongs;
 INSERT INTO belongs (id_sand_pack, id_sand, gold_contained)
-SELECT c.id_article, sp.arena, sp.gold
+SELECT c.id_article + c.max_article, sp.arena, sp.gold
 FROM sand_pack_aux AS sp,
 counter AS c
 WHERE c.id_sand_pack = sp.id;
