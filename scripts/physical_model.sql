@@ -130,6 +130,17 @@ CREATE TABLE stack (
     FOREIGN KEY (id_player) REFERENCES player (id_player)
 );
 
+-- create table share_stack -> share_stack(id_stack(PK/FK), id_player(PK/FK))
+DROP TABLE IF EXISTS share_stack CASCADE;
+CREATE TABLE share_stack (
+    id_stack INTEGER,
+    id_player VARCHAR(100),
+    PRIMARY KEY(id_stack, id_player),
+    FOREIGN KEY(id_stack) REFERENCES stack(id_stack),
+    FOREIGN KEY(id_player) REFERENCES player(id_player)
+);
+
+
 -- create table group -> group(card_name(PK/FK), id_stack(PK/FK))
 DROP TABLE IF EXISTS "group" CASCADE;
 CREATE TABLE "group" (

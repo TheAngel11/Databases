@@ -627,7 +627,12 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 
 -- STACK
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
-SELECT  deck, title, date, description, player FROM player_deck_aux GROUP BY deck, title, date, description, player;
+SELECT DISTINCT deck, title, date, description, player FROM player_deck_aux;
+
+-- SHARE_STACK
+INSERT INTO share_stack(id_stack, id_player)
+SELECT s.id_stack, p.id_player FROM player AS p JOIN shared_deck_aux AS sd ON p.id_player = sd.player 
+JOIN stack AS s ON sd.deck = s.id_stack;
 
 -- OWNS
 DELETE FROM owns;
