@@ -60,6 +60,7 @@ SELECT c.name AS card, c.rarity AS rarity
 FROM card_aux AS c
 GROUP BY c.name, c.rarity
 ORDER BY rarity;
+
 --Seleccionar les cartes d'un jugador una per una amb cartes de nivell major a 5
 SELECT c.name AS card, p.tag AS tag, p_c.level AS level
 FROM card_aux AS c JOIN player_card_aux AS p_c ON p_c.name = c.name
@@ -75,8 +76,6 @@ ORDER BY card;
 SELECT p.id_player AS player, p.name, p.exp, p.trophies, p.gold, p.gems
 FROM player AS p
 ORDER BY player;
-
-
 
     -- Model Csv --
 
@@ -204,6 +203,12 @@ SELECT * FROM sand;
 
 -- Model CSV
 SELECT * FROM sand_aux;
+
+-- Select those arenas that unlocks the card "Inferno Dragon" (Model Fisic)
+SELECT sand, title AS sand_title FROM card INNER JOIN sand ON card.sand = sand.id WHERE card.id_card_name LIKE 'Inferno Dragon';
+
+-- The same but in Model CSV...
+-- TODO: create the same query
 
 -- Consulta 2. Select all the cards that are unlocked in the arena with id 54000025
 -- Model Fisic
