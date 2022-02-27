@@ -205,10 +205,10 @@ SELECT * FROM sand;
 SELECT * FROM sand_aux;
 
 -- Select those arenas that unlocks the card "Inferno Dragon" (Model Fisic)
-SELECT sand, title AS sand_title FROM card INNER JOIN sand ON card.sand = sand.id WHERE card.id_card_name LIKE 'Inferno Dragon';
+SELECT sand, title AS title FROM card INNER JOIN sand ON card.sand = sand.id WHERE card.id_card_name LIKE 'Inferno Dragon';
 
 -- The same but in Model CSV...
--- TODO: create the same query
+SELECT sand_aux.id, sand_aux.name AS title FROM card_aux INNER JOIN sand_aux ON card_aux.arena = sand_aux.id WHERE card_aux.name LIKE 'Inferno Dragon';
 
 -- Consulta 2. Select all the cards that are unlocked in the arena with id 54000025
 -- Model Fisic
