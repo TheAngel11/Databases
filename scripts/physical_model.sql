@@ -374,10 +374,12 @@ DROP TABLE IF EXISTS accepts CASCADE;
 CREATE TABLE accepts (
     id_mission INTEGER NOT NULL,
     id_player VARCHAR(100) NOT NULL,
+    id_sand INTEGER NOT NULL,
     is_completed BOOLEAN NOT NULL,
     FOREIGN KEY (id_mission) REFERENCES mission (id_mission),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    PRIMARY KEY (id_mission, id_player)
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
+    PRIMARY KEY (id_mission, id_player, id_sand)
 );
 
 -- create table friend -> friend(id_player1(PK/FK), id_player2(PK/FK))

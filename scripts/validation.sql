@@ -229,7 +229,7 @@ SELECT * FROM player_badge_aux
     INNER JOIN sand_aux ON sand_aux.id = player_badge_aux.arena
 WHERE sand_aux.id = 54000025;
 
------------- MISSION -----------
+------------ MISSION / QUESTS -----------
 --Consulta 1: Selecciona todas las misiones que se han completado
 --Model fisic
 SELECT * FROM mission
@@ -241,6 +241,23 @@ WHERE a.is_completed = true;
 SELECT player_tag, quest_id
 FROM player_quest_aux
 GROUP BY player_quest_aux.player_tag, player_quest_aux.quest_id;
+
+-- Consulta 2: Selecciona aquellas misiones que se han completado en la arena "Inferno Dragon"
+--Model fisic
+SELECT p.id_player AS player, mission.task_description AS mission_requirement, s.id, s.title FROM mission
+    INNER JOIN accepts a ON mission.id_mission = a.id_mission
+    INNER JOIN player p on a.id_player = p.id_player
+    INNER JOIN sand s ON s.id = a.id_sand
+WHERE a.is_completed = true AND s.id = 54000025
+ORDER BY p.id_player;
+
+-- Model CSV
+SELECT DISTINCT player_tag AS player, quest_requirement AS mission_requirement, arena_id, sand_aux.name AS arena_name
+FROM player_quest_aux
+    INNER JOIN quest_arena_aux qaa ON player_quest_aux.quest_id = qaa.quest_id
+    INNER JOIN sand_aux ON sand_aux.id = qaa.arena_id
+WHERE qaa.arena_id = 54000025
+ORDER BY player_tag;
 
 SELECT * FROM mission INNER JOIN depends d on mission.id_mission = d.id_mission_1 WHERE id_mission_1 = 110;
 

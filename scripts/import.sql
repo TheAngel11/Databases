@@ -456,7 +456,7 @@ SELECT  tag, name, experience, trophies, random() * (10000 - 25 + 1) + 25, rando
 
 -- Sand
 -- Insert into sand the data from the auxiliary table (sand_aux, quest_arena)
-DELETE FROM sand; -- bypass warning
+DELETE FROM sand;
 INSERT INTO sand(id, title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 SELECT sand_aux.id, name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
 FROM sand_aux, quest_arena_aux
@@ -474,9 +474,9 @@ SELECT name, startDate, endDate FROM season_aux;
 -- For the gems, each success has the same gems, so make the average will not be a problem.
 DELETE FROM success;
 INSERT INTO success(id_title, gems_reward)
-SELECT name, AVG(gems)
+SELECT DISTINCT name, gems
 FROM player_achievement_aux
-GROUP BY name;
+GROUP BY name, gems;
 
 -- Gets
 -- Union of the tables: player - gets - success
@@ -486,7 +486,7 @@ INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achie
 -- Mission
 -- mission(id_mission(PK), task_description)
 DELETE FROM mission;
-INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux GROUP BY quest_id, quest_requirement;
+INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux;
 
 -- Depends
 -- A mission CAN depend on another one
@@ -501,7 +501,9 @@ INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_
 -- We have the "unlock" field but is a date. So in order to not to store empty data in the "completed" field, I have filled in those missions that
 -- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
 DELETE FROM accepts;
-INSERT INTO accepts(id_mission, id_player, is_completed) SELECT DISTINCT quest_id, player_tag, unlock < NOW() AS completed FROM player_quest_aux;
+INSERT INTO accepts(id_mission, id_player, id_sand, is_completed)
+SELECT DISTINCT player_quest_aux.quest_id, player_tag, quest_arena_aux.arena_id, unlock < NOW() AS completed
+FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = quest_arena_aux.quest_id;
 
 -- Credit Card
 -- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
