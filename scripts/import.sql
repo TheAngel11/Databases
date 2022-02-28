@@ -532,8 +532,7 @@ select * from frees;
 DELETE FROM clan_battle;
 INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
-FROM clan_battle_aux AS cb 
-GROUP BY cb.battle, cb.start_date, cb.end_date;
+FROM clan_battle_aux AS cb;
 
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
@@ -731,7 +730,6 @@ WHERE cst.structure is not null
 AND bu.mod_spawn_damage is  null
 AND bu.mod_radius is  null
 AND bu.mod_lifetime is  null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 --Technology
@@ -744,7 +742,6 @@ WHERE cst.tech is not null
 AND te.mod_spawn_damage is  null
 AND te.mod_radius is  null
 AND te.mod_lifetime is  null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 ---TROOP
@@ -757,7 +754,6 @@ JOIN troop AS tr ON o.card = tr.troop_name
 JOIN building_aux AS bu ON cst.structure = bu.building
 WHERE cst.structure is not null
 AND bu.mod_spawn_damage is not null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 --Technology
@@ -769,7 +765,6 @@ JOIN troop AS tr ON o.card = tr.troop_name
 JOIN technology_aux AS te ON cst.tech = te.technology
 WHERE cst.tech is not null
 AND te.mod_spawn_damage is not null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 ---BUILDING
@@ -782,7 +777,6 @@ JOIN building AS b ON o.card = b.building_name
 JOIN building_aux AS bu ON cst.structure = bu.building
 WHERE cst.structure is not null
 AND bu.mod_lifetime is not null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 --Technology
@@ -794,7 +788,6 @@ JOIN building AS b ON o.card = b.building_name
 JOIN technology_aux AS te ON cst.tech = te.technology
 WHERE cst.tech is not null
 AND te.mod_lifetime is not null 
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 ---ENCHANTMENT
@@ -807,7 +800,6 @@ JOIN enchantment AS en ON o.card = en.enchantment_name
 JOIN building_aux AS bu ON cst.structure = bu.building
 WHERE cst.structure is not null
 AND bu.mod_radius is not null
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
 ;
 
 --Technology
@@ -818,9 +810,7 @@ JOIN owns AS o ON j.id_player = o.player
 JOIN enchantment AS en ON o.card = en.enchantment_name
 JOIN technology_aux AS te ON cst.tech = te.technology
 WHERE cst.tech is not null
-AND te.mod_radius is not null 
-GROUP BY cst.clan, cst.tech, cst.structure , o.card, cst.level, cst.date
-;
+AND te.mod_radius is not null ;
 
 -- IMPORTS ARNAU
 
@@ -834,25 +824,44 @@ INSERT INTO receiver (id)
 SELECT id_player FROM player;
 
 DELETE FROM message;
-INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
-SELECT mp.id, mp.text, mp.date, mp.sender, mp.receiver, mp.answer
+INSERT INTO message (id_message, issue, datetime, id_owner, id_replier)
+SELECT mp.id, mp.text, mp.date, mp.sender, mp.receiver
 FROM message_players_aux AS mp
 JOIN player AS p ON p.id_player = sender
 JOIN receiver AS r ON r.id = receiver;
 
-INSERT INTO message (id_message, issue, datetime, id_owner, id_replier, id_reply)
-SELECT mc.id + MAX(mp.id), mc.text, mc.date, mc.sender, mc.receiver, mc.answer + MAX(mp.id)
+UPDATE message AS m
+SET id_reply = mess.answer
+FROM (SELECT mp.answer, mp.id
+FROM message_players_aux AS mp
+WHERE mp.answer IS NOT NULL) AS mess
+WHERE mess.id = m.id_message;
+
+INSERT INTO message (id_message, issue, datetime, id_owner, id_replier)
+SELECT mc.id + MAX(mp.id), mc.text, mc.date, mc.sender, mc.receiver
 FROM message_clans_aux AS mc
 JOIN player AS p ON p.id_player = sender
 JOIN clan AS c ON c.id_clan = receiver,
 message_players_aux AS mp
-GROUP BY mc.id, mc.text, mc.date, mc.sender, mc.receiver, mc.answer; 
+GROUP BY mc.id, mc.text, mc.date, mc.sender, mc.receiver;
+
+UPDATE message AS m
+SET id_reply = mess.answer
+FROM (SELECT (mc.answer + aux.max) AS answer, (mc.id + aux.max) AS id
+FROM message_clans_aux AS mc,
+(SELECT MAX(mp.id) AS max FROM message_clans_aux AS mp) AS aux
+WHERE mc.answer IS NOT NULL) AS mess
+WHERE mess.id = m.id_message;
 
 -- Shop
 INSERT INTO shop(id_shop_name, available_gems)
 VALUES ('SHOP', random() * (10000 - 25 + 1) + 25);
 
 -- Article
+DELETE FROM belongs;
+DELETE FROM bundle;
+DELETE FROM chest;
+DELETE FROM emoticon;
 DELETE FROM article;
 
 -- Sand_pack
@@ -872,8 +881,6 @@ WHERE pp.arenapack_id is not null
 GROUP BY pp.arenapack_id, a.id_article
 ORDER BY pp.arenapack_id ASC;
 
-DELETE FROM article;
-
 INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
 SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock), s.id_shop_name
 FROM player_purchases_aux AS pp,
@@ -889,7 +896,6 @@ SELECT id_article + max_article
 FROM counter
 ORDER BY id_article ASC;
 
-DELETE FROM belongs;
 INSERT INTO belongs (id_sand_pack, id_sand, gold_contained)
 SELECT c.id_article + c.max_article, sp.arena, sp.gold
 FROM sand_pack_aux AS sp,
