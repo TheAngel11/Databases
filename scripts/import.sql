@@ -833,7 +833,6 @@ GROUP BY pp.arenapack_id, s.id_shop_name
 ORDER BY pp.arenapack_id ASC;
 
 -- hemos quitado el campo gems_contained de la tabla sand_pack
-DELETE FROM sand_pack;
 INSERT INTO sand_pack (id_sand_pack)
 SELECT id_article + max_article
 FROM counter
@@ -872,7 +871,6 @@ shop AS s
 WHERE pp.bundle_gold is not null
 ORDER BY pp.buy_cost ASC;
 
-DELETE FROM bundle;
 INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
 SELECT id_article + num_sand_pack, gold, gems
 FROM counter
@@ -904,7 +902,6 @@ WHERE pp.emote_name is not null
 AND pp.emote_path is not null
 ORDER BY pp.buy_cost ASC;
 
-DELETE FROM emoticon;
 INSERT INTO emoticon(id_emoticon, path)
 SELECT id_article + num_articles, path
 FROM counter
@@ -930,7 +927,7 @@ AND pp.chest_name is not null
 AND pp.chest_unlock_time is not null
 AND pp.chest_num_cards is not null
 GROUP BY pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
-ORDER BY pp.buy_cost ASC;
+ORDER BY pp.buy_cost;
 
 INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
 SELECT DISTINCT pp.chest_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
@@ -940,23 +937,20 @@ WHERE pp.chest_name is not null
 AND pp.chest_rarity is not null
 AND pp.chest_unlock_time is not null
 AND pp.chest_num_cards is not null
-ORDER BY pp.buy_cost ASC;
+ORDER BY pp.buy_cost;
 
-DELETE FROM chest;
 INSERT INTO chest(id_chest, rarity, unlocking_time, gold_contained, gems_contained)
 SELECT id_article + num_articles, chest_rarity, chest_unlock_time, random() * (1000 - 25 + 1) + 25, random() * (5 - 25 + 1) + 25
 FROM counter
-ORDER BY id_article ASC;
+ORDER BY id_article;
 
 -- Reward
-DELETE FROM reward;
 INSERT INTO reward (id_reward, trophies_needed)
 SELECT DISTINCT id_reward, MAX(trophies_needed)
 FROM reward_aux
 GROUP BY id_reward;
 
 -- Friend
-DELETE FROM friend;
 INSERT INTO friend(id_player1, id_player2)
 SELECT requester, requested
 FROM friends_aux
@@ -966,15 +960,13 @@ JOIN receiver AS r ON r.id = requested;
 DROP TABLE IF EXISTS receiver;
 
 -- Obtains
-DELETE FROM obtains;
-INSERT INTO obtains(id_success, id_player)
-SELECT pa.name, pa.player
+INSERT INTO obtains(id_success, id_player, date)
+SELECT pa.name, pa.player, pa.date
 FROM player_achievement_aux AS pa
 JOIN player AS p ON p.id_player = pa.player
 JOIN success AS s ON s.id_title = pa.name;
 
 -- Is found
-DELETE FROM is_found;
 INSERT INTO is_found(id_chest, id_mission)
 SELECT DISTINCT isf.chest, isf.mission
 FROM is_found_aux AS isf
@@ -989,7 +981,6 @@ JOIN player AS p ON p.id_player = pp.player
 JOIN credit_card AS cc ON cc.number = pp.credit_card;*/
 
 -- Buys
-DELETE FROM buys;
 INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
 SELECT s.id_shop_name, '#LVRUV8YV', 'Knight', '2022-1-14 21:19:00'
 FROM shop AS s;

@@ -455,6 +455,7 @@ DROP TABLE IF EXISTS obtains CASCADE;
 CREATE TABLE obtains (
     id_success VARCHAR(100) NOT NULL,
     id_player VARCHAR(100) NOT NULL,
+    date DATE NOT NULL,
     FOREIGN KEY (id_success) REFERENCES success (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     PRIMARY KEY (id_success, id_player)
