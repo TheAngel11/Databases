@@ -38,7 +38,7 @@ CREATE TABLE shop (
 -- create table article -> article(id_article(PK), name, real_price, times_purchasable, id_shop_name(FK))
 DROP TABLE IF EXISTS article CASCADE;
 CREATE TABLE article (
-    id_article SERIAL PRIMARY KEY,
+    id_article INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     real_price FLOAT NOT NULL,
     times_purchasable INTEGER NOT NULL,
