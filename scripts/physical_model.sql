@@ -211,32 +211,34 @@ CREATE TABLE clan_battle (
 DROP TABLE IF EXISTS battle CASCADE;
 CREATE TABLE battle (
     id_battle SERIAL PRIMARY KEY,
+    winner VARCHAR(100) NOT NULL,
+    loser VARCHAR(100) NOT NULL,
     datetime DATE NOT NULL,
     duration TIME NOT NULL,
     points INTEGER NOT NULL,
     trophies_played INTEGER NOT NULL,
     gold_played INTEGER NOT NULL,
 	clan_battle INTEGER,
-	FOREIGN KEY (clan_battle) REFERENCES clan_battle (clan_battle)
+	FOREIGN KEY (clan_battle) REFERENCES clan_battle (clan_battle),
+    FOREIGN KEY (winner) REFERENCES player (id_player),
+    FOREIGN KEY (loser) REFERENCES player (id_player)
 );
 
 -- create table complete -> compete(id_battle(PK/FK), id_player(PK/FK), id_sand(PK/FK), victories_count, defeat_count, points_count, season(FK))
-DROP TABLE IF EXISTS complete CASCADE;
-CREATE TABLE complete (
+DROP TABLE IF EXISTS takes_place CASCADE;
+CREATE TABLE takes_place (
     id_battle INTEGER NOT NULL,
-    id_player VARCHAR(100) NOT NULL,
     id_sand INTEGER NOT NULL,
+    id_season VARCHAR(100) NOT NULL,
     datetime DATE NOT NULL,
-    season VARCHAR(100) NOT NULL,
     FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
-    FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_sand) REFERENCES sand (id),
-    FOREIGN KEY (season) REFERENCES season (id_name),
-    PRIMARY KEY (id_battle, id_player, id_sand, datetime)
+    FOREIGN KEY (id_season) REFERENCES season (id_name),
+    PRIMARY KEY (id_battle, datetime)
 ); 
 
 
-DROP TABLE IF EXISTS  fight CASCADE;
+DROP TABLE IF EXISTS fight CASCADE;
 CREATE TABLE fight (
     id_clan VARCHAR(100) NOT NULL,
     clan_battle INTEGER NOT NULL,
@@ -453,6 +455,7 @@ DROP TABLE IF EXISTS obtains CASCADE;
 CREATE TABLE obtains (
     id_success VARCHAR(100) NOT NULL,
     id_player VARCHAR(100) NOT NULL,
+    date DATE NOT NULL,
     FOREIGN KEY (id_success) REFERENCES success (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     PRIMARY KEY (id_success, id_player)

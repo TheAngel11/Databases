@@ -269,8 +269,6 @@ SELECT * FROM battle;
 -- Model CSV
 SELECT * FROM battle_aux;
 
-SELECT * FROM complete WHERE id_player = '#CQG8R8UV';
-
 ------------ ASSOLIMENTS -----------
 --Consulta 1: Selecciona todas las asolimientos
 --Model fisic

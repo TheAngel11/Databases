@@ -26,8 +26,8 @@ CSV HEADER;
 
 DROP TABLE IF EXISTS battle_aux;
 CREATE TABLE battle_aux(
-	winner INTEGER,
-	loser INTEGER,
+	winner VARCHAR(100),
+	loser VARCHAR(100),
 	winner_score INTEGER,
 	loser_score INTEGER,
 	date DATE,
@@ -196,6 +196,7 @@ CREATE TABLE player_aux(
 	cardnumber BIGINT,
 	cardexpiry DATE
 );
+
 COPY player_aux
 FROM '/Users/Shared/BBDD/players.csv'
 DELIMITER ','
@@ -211,6 +212,7 @@ CREATE TABLE player_quest_aux (
 	quest_depends INTEGER,
 	unlock DATE
 );
+
 COPY player_quest_aux
 FROM '/Users/Shared/BBDD/players_quests.csv'
 DELIMITER ','
@@ -225,6 +227,7 @@ CREATE TABLE player_achievement_aux(
 	"date" DATE,
 	gems INTEGER
 );
+
 COPY player_achievement_aux
 FROM '/Users/Shared/BBDD/playersachievements.csv'
 DELIMITER ','
@@ -238,6 +241,7 @@ CREATE TABLE player_badge_aux(
 	"date" DATE,
 	img VARCHAR(100)
 );
+
 COPY player_badge_aux
 FROM '/Users/Shared/BBDD/playersbadge.csv'
 DELIMITER ','
@@ -252,6 +256,7 @@ CREATE TABLE player_card_aux(
 	amount INTEGER,
 	"date" TIMESTAMP
 );
+
 COPY player_card_aux
 FROM '/Users/Shared/BBDD/playerscards.csv'
 DELIMITER ','
@@ -264,6 +269,7 @@ CREATE TABLE player_clan_aux(
 	"role" VARCHAR(300),
 	"date" DATE
 );
+
 COPY player_clan_aux
 FROM '/Users/Shared/BBDD/playersClans.csv'
 DELIMITER ','
@@ -276,6 +282,7 @@ CREATE TABLE player_clan_donation_aux(
 	gold INTEGER,
 	"date" DATE
 );
+
 COPY player_clan_donation_aux
 FROM '/Users/Shared/BBDD/playersClansdonations.csv'
 DELIMITER ','
@@ -284,13 +291,14 @@ CSV HEADER;
 DROP TABLE IF EXISTS player_deck_aux;
 CREATE TABLE player_deck_aux(
 	player VARCHAR(100),
-	deck INTEGER,
+	deck VARCHAR(100),
 	title VARCHAR(100),
 	description VARCHAR(500),
 	"date" DATE,
 	card INTEGER,
 	"level" INTEGER
 );
+
 COPY player_deck_aux
 FROM '/Users/Shared/BBDD/playersdeck.csv'
 DELIMITER ','
@@ -303,6 +311,7 @@ CREATE TABLE quest_arena_aux(
 	gold INTEGER,
 	experience INTEGER
 );
+
 COPY quest_arena_aux
 FROM '/Users/Shared/BBDD/quests_arenas.csv'
 DELIMITER ','
@@ -314,6 +323,7 @@ CREATE TABLE season_aux(
 	startDate DATE,
 	endDate DATE
 );
+
 COPY season_aux
 FROM '/Users/Shared/BBDD/seasons.csv'
 DELIMITER ','
@@ -343,6 +353,7 @@ CREATE TABLE technology_aux(
 	mod_lifetime INTEGER,
 	description VARCHAR(500)
 );
+
 COPY technology_aux FROM '/Users/Shared/BBDD/technologies.csv'
 DELIMITER ','
 CSV HEADER;
@@ -353,6 +364,7 @@ CREATE TABLE reward_aux (
     id_reward INTEGER,
     trophies_needed INTEGER
 );
+
 COPY reward_aux
 FROM '/Users/Shared/BBDD/rewards.csv'
 DELIMITER ','
@@ -372,19 +384,6 @@ DELIMITER ','
 CSV HEADER;
 
 ALTER TABLE clan_badge_aux ALTER COLUMN battle TYPE INTEGER USING battle::integer;
-
-DROP TABLE IF EXISTS complete_aux CASCADE;
-CREATE TABLE complete_aux (
-    id_battle INTEGER NOT NULL,
-    id_player VARCHAR(255) NOT NULL,
-    id_sand INTEGER NOT NULL,
-    season VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
-    FOREIGN KEY (id_player) REFERENCES player (id_player),
-    FOREIGN KEY (id_sand) REFERENCES sand (id),
-    FOREIGN KEY (season) REFERENCES season (id_name),
-    PRIMARY KEY (id_battle, id_player, id_sand)
-);
 
 DROP TABLE IF EXISTS is_found_aux;
 CREATE table is_found_aux(
@@ -422,13 +421,14 @@ DELETE FROM give;
 DELETE FROM joins;
 DELETE FROM role;
 DELETE FROM "group";
+DELETE FROM share_stack;
 DELETE FROM stack;
 DELETE FROM owns;
 DELETE FROM level;
 DELETE FROM enchantment;
 DELETE FROM troop;
 DELETE FROM building;
-DELETE FROM complete;
+DELETE FROM takes_place;
 DELETE FROM frees;
 DELETE FROM badge;
 DELETE FROM credit_card;
@@ -450,13 +450,11 @@ DELETE FROM player;
 -- NOW MIGRATE THE DATA --
 
 -- PLAYER
-DELETE FROM player;
 INSERT INTO player(id_player, name, exp, trophies, gold, gems)
 SELECT  tag, name, experience, trophies, random() * (10000 - 25 + 1) + 25, random() * (10000 - 25 + 1) + 25 FROM player_aux;
 
 -- Sand
 -- Insert into sand the data from the auxiliary table (sand_aux, quest_arena)
-DELETE FROM sand;
 INSERT INTO sand(id, title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
 SELECT sand_aux.id, name, AVG(maxTrophies), AVG(minTrophies), AVG(experience), AVG(gold)
 FROM sand_aux, quest_arena_aux
@@ -465,14 +463,12 @@ GROUP BY id, name;
 
 -- Season
 -- Insert into season the data from the old database (season_aux)
-DELETE FROM season;
 INSERT INTO season(id_name, start_date, end_date)
 SELECT name, startDate, endDate FROM season_aux;
 
 -- Success
 -- Explanation: the name has to be unique, so that's the reason we are using GROUP BY statement.
 -- For the gems, each success has the same gems, so make the average will not be a problem.
-DELETE FROM success;
 INSERT INTO success(id_title, gems_reward)
 SELECT DISTINCT name, gems
 FROM player_achievement_aux
@@ -480,19 +476,16 @@ GROUP BY name, gems;
 
 -- Gets
 -- Union of the tables: player - gets - success
-DELETE FROM gets;
 INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achievement_aux AS pa;
 
 -- Mission
 -- mission(id_mission(PK), task_description)
-DELETE FROM mission;
 INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux;
 
 -- Depends
 -- A mission CAN depend on another one
 -- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
 -- See more here: https://bit.ly/3zoaHCL
-DELETE FROM depends;
 INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_depends FROM player_quest_aux;
 
 -- Accepts
@@ -500,7 +493,6 @@ INSERT INTO depends(id_mission_1, id_mission_2) SELECT DISTINCT quest_id, quest_
 -- We have another problem. We don't know if that mission is completed in order to unlock another ones.
 -- We have the "unlock" field but is a date. So in order to not to store empty data in the "completed" field, I have filled in those missions that
 -- are unlocked for now. So we will have to supose they are completed. Fault of us? I don't believe so.
-DELETE FROM accepts;
 INSERT INTO accepts(id_mission, id_player, id_sand, is_completed)
 SELECT DISTINCT player_quest_aux.quest_id, player_tag, quest_arena_aux.arena_id, unlock < NOW() AS completed
 FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = quest_arena_aux.quest_id;
@@ -509,14 +501,12 @@ FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = 
 -- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
 -- The date, as I have supposed, is the expiration date of the card, but that field is not in the importation data, so I have filled it with the purchase date.
 -- Is not a good way to do so, but the field is there and we have to fill out with any value. We can not store empty data. Fault of us.
-DELETE FROM credit_card;
 INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases_aux;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
 -- So we will need to extract the unique badges from the player_badge table and insert them in the badge table.
 -- That is made by the GROUP BY statement.
-DELETE FROM badge;
 INSERT INTO badge(id_title, image_path) SELECT name, img FROM player_badge_aux GROUP BY name, img;
 
 --Badge de clan
@@ -524,100 +514,62 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
-DELETE FROM frees;
 INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
 select * from frees;
 
 --Clan_battle
-DELETE FROM clan_battle;
 INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
 FROM clan_battle_aux AS cb;
 
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
-INSERT INTO battle(datetime, duration, points, trophies_played, gold_played, clan_battle) 
-SELECT date, duration, winner, floor(random() * 50 + 1)::int, floor(random() * 2000 + 1)::int, clan_battle
+/* In the battle table we have:
+   - winner (references to player_deck_aux.deck) it is INTEGER
+   - loser (references to player_deck_aux.deck) it is INTEGER
+   We need to fill this table with the winner and the loser with the player ids. So the result may be:
+ */
+UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
+INSERT INTO battle (datetime, duration, points, trophies_played, gold_played, winner, loser, clan_battle)
+SELECT DISTINCT battle_aux.date,
+                battle_aux.duration,
+                floor(random() * 2000 + 1)::int,
+                floor(random() * 2000 + 1)::int,
+                floor(random() * 2000 + 1)::int,
+                (SELECT player FROM player_deck_aux WHERE deck = winner LIMIT 1),
+                (SELECT player FROM player_deck_aux WHERE deck = loser LIMIT 1),
+                battle_aux.clan_battle
 FROM battle_aux;
 
-
--- Complete
--- Explanation: we are importing the data from a csv.
-
--- Union between battle and battle_aux (id's)
-SELECT id_battle, winner, loser, battle.duration, datetime, points, winner_score, loser_score FROM battle, battle_aux WHERE battle.duration = battle_aux.duration AND battle.datetime = battle_aux.date;
-
--- winners
-SELECT id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score
-FROM battle, battle_aux, player_deck_aux
-WHERE battle.duration = battle_aux.duration
-        AND battle.datetime = battle_aux.date
-        AND (battle_aux.winner = player_deck_aux.deck OR battle_aux.loser = player_deck_aux.deck)
-GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score;
-
--- losers
-SELECT id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score
-FROM battle, battle_aux, player_deck_aux
-WHERE battle.duration = battle_aux.duration
-        AND battle.datetime = battle_aux.date
-        AND battle_aux.loser = player_deck_aux.deck
-GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points, winner_score, loser_score;
-
-
--- losers reduced
-DROP TABLE IF EXISTS complete_aux;
-CREATE TABLE complete_aux (
-    id_battle INTEGER,
-    id_player VARCHAR(255)
-);
-
-INSERT INTO complete_aux (id_battle, id_player)
-SELECT id_battle, player AS id_player
-FROM battle, battle_aux, player_deck_aux
-WHERE battle.duration = battle_aux.duration
-    AND battle.datetime = battle_aux.date
-    AND (battle_aux.loser = player_deck_aux.deck OR battle_aux.winner = player_deck_aux.deck)
-GROUP BY id_battle, player, winner, loser, battle.duration, datetime, points;
-
--- Alter creating a new column called "id_sand" in losers_reduced
-ALTER TABLE complete_aux ADD COLUMN id_sand INTEGER;
-ALTER TABLE complete_aux ADD COLUMN id_season VARCHAR(100);
-ALTER TABLE complete_aux ADD COLUMN datetime DATE;
-
--- Fill id_sand with random values between 54000000 and 54000058
-UPDATE complete_aux SET id_sand = floor(random()*(54000058-54000000+1))+54000000;
-UPDATE complete_aux SET id_season = 'T' || floor(random() * 9 + 1)::int;
-UPDATE complete_aux SET datetime = date_trunc('day', now() - (random() * (now() - '2018-01-01')::interval));
-
-DELETE FROM complete;
-INSERT INTO complete(id_battle, id_player, id_sand, season, datetime) SELECT id_battle, id_player, complete_aux.id_sand, id_season, complete_aux.datetime FROM complete_aux;
-SELECT * FROM complete;
+-- Takes Place
+-- Explanation: a battle takes place in one arena (a.k.a sand) and in one season.
+-- So we have to make the union of the battles that take place in the same sand and in the same season.
+INSERT INTO takes_place(id_battle, id_sand, id_season, datetime)
+SELECT id_battle,
+       floor(random()*(54000058-54000000+1))+54000000, 'T' || floor(random() * 9 + 1)::int,
+       date_trunc('day', now() - (random() * (now() - '2018-01-01')::interval))
+FROM battle;
 
 -- RARITY
-DELETE FROM rarity;
 INSERT INTO rarity(degree, multiplicative_factor)
 SELECT rarity, random() * (10000 - 25 + 1) + 25 FROM card_aux
 GROUP BY rarity;
 
 -- CARD
-DELETE FROM card;
 INSERT INTO card(id_card_name, damage, attack_speed, rarity, sand)
 SELECT name, damage, hit_speed, rarity, arena FROM card_aux;
 
 -- BUILDING
-DELETE FROM building;
 INSERT INTO building (building_name, life)
 SELECT name, lifetime FROM card_aux AS card
 WHERE card.lifetime IS NOT NULL;
 
 -- TROOP
-DELETE FROM troop;
     INSERT INTO troop (troop_name, spawn_damage)
     SELECT name, spawn_damage FROM card_aux AS card
     WHERE card.spawn_damage IS NOT NULL;
 
 -- ENCHANTMENT
-DELETE FROM enchantment;
 INSERT INTO enchantment (enchantment_name, effect_radius)
 SELECT name, radious FROM card_aux AS card
 WHERE card.radious IS NOT NULL;
@@ -628,7 +580,7 @@ SELECT level,  random() * (10000 - 25 + 1) + 25,  random() * (10000 - 25 + 1) + 
 
 -- STACK
 INSERT INTO stack(id_stack, name, creation_date, description, id_player)
-SELECT DISTINCT deck, title, date, description, player FROM player_deck_aux;
+SELECT DISTINCT NULLIF(deck, '')::int, title, date, description, player FROM player_deck_aux;
 
 -- SHARE_STACK
 INSERT INTO share_stack(id_stack, id_player)
@@ -636,7 +588,6 @@ SELECT s.id_stack, p.id_player FROM player AS p JOIN shared_deck_aux AS sd ON p.
 JOIN stack AS s ON sd.deck = s.id_stack;
 
 -- OWNS
-DELETE FROM owns;
 INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gained)
 SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
 FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
@@ -644,10 +595,9 @@ FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
-SELECT DISTINCT c.name, deck FROM player_deck_aux, card_aux AS c;
+SELECT DISTINCT c.name, NULLIF(deck, '')::int FROM player_deck_aux, card_aux AS c;
 
 -- Clan
-DELETE FROM clan CASCADE;
 INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
 SELECT ca.tag, ca.name, ca.description, ca.requiredTrophies, ca.score, ca.trophies, pc.player, random() * (10000 - 25 + 1) + 25, pc."date"
 FROM clans_aux AS ca JOIN player_clan_aux AS pc
@@ -656,25 +606,21 @@ WHERE pc."role" LIKE 'leader:%';
 
 -- Role
 -- ID de SERIAL
-DELETE FROM role;
 INSERT INTO role(description)
 SELECT DISTINCT "role" FROM player_clan_aux;
 
 -- Join
-DELETE FROM joins;
 INSERT INTO joins(id_clan, id_player, id_role, datetime_in)
 SELECT pc.clan, pc.player, ro.id_role, pc."date" FROM player_clan_aux AS pc JOIN role AS ro
 ON ro.description = pc."role";
 
 -- Give
-DELETE FROM give;
 INSERT INTO give(id_clan, id_player, gold, experience, date)
 SELECT pd.clan, pd.player, SUM(pd.gold), random() * (10000 - 25 + 1) + 25, pd.date
 FROM player_clan_donation_aux AS pd
 GROUP BY pd."date", pd.clan, pd.player HAVING SUM(pd.gold) > 0;
 
 --Fight
-DELETE FROM fight;
 INSERT INTO fight(id_clan,clan_battle)
 SELECT clan, battle FROM clan_battle_aux GROUP BY clan, battle;
 
@@ -685,7 +631,6 @@ SELECT cb.clan, cb.battle, cb.badge
 FROM clan_badge_aux AS cb;
 
 -- Modifier
-DELETE FROM modifier;
 INSERT INTO modifier(name_modifier, description, cost, damage, attack_speed, effect_radius, spawn_damage, life )
 SELECT bu.building, bu.description, bu.cost, bu.mod_damage, bu.mod_hit_speed, bu.mod_radius, bu.mod_spawn_damage, bu.mod_lifetime FROM building_aux AS bu;
 
@@ -720,7 +665,6 @@ WHERE te.prerequisite is not null;
 ---MODIFY
 -- TOTES LES CARTES
 --Structure
-DELETE FROM modify;
 INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
 SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
 FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
@@ -823,7 +767,6 @@ CREATE TABLE receiver(
 INSERT INTO receiver (id)
 SELECT id_player FROM player;
 
-DELETE FROM message;
 INSERT INTO message (id_message, issue, datetime, id_owner, id_replier)
 SELECT mp.id, mp.text, mp.date, mp.sender, mp.receiver
 FROM message_players_aux AS mp
@@ -890,7 +833,6 @@ GROUP BY pp.arenapack_id, s.id_shop_name
 ORDER BY pp.arenapack_id ASC;
 
 -- hemos quitado el campo gems_contained de la tabla sand_pack
-DELETE FROM sand_pack;
 INSERT INTO sand_pack (id_sand_pack)
 SELECT id_article + max_article
 FROM counter
@@ -929,7 +871,6 @@ shop AS s
 WHERE pp.bundle_gold is not null
 ORDER BY pp.buy_cost ASC;
 
-DELETE FROM bundle;
 INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
 SELECT id_article + num_sand_pack, gold, gems
 FROM counter
@@ -961,7 +902,6 @@ WHERE pp.emote_name is not null
 AND pp.emote_path is not null
 ORDER BY pp.buy_cost ASC;
 
-DELETE FROM emoticon;
 INSERT INTO emoticon(id_emoticon, path)
 SELECT id_article + num_articles, path
 FROM counter
@@ -987,7 +927,7 @@ AND pp.chest_name is not null
 AND pp.chest_unlock_time is not null
 AND pp.chest_num_cards is not null
 GROUP BY pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
-ORDER BY pp.buy_cost ASC;
+ORDER BY pp.buy_cost;
 
 INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
 SELECT DISTINCT pp.chest_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
@@ -997,23 +937,20 @@ WHERE pp.chest_name is not null
 AND pp.chest_rarity is not null
 AND pp.chest_unlock_time is not null
 AND pp.chest_num_cards is not null
-ORDER BY pp.buy_cost ASC;
+ORDER BY pp.buy_cost;
 
-DELETE FROM chest;
 INSERT INTO chest(id_chest, rarity, unlocking_time, gold_contained, gems_contained)
 SELECT id_article + num_articles, chest_rarity, chest_unlock_time, random() * (1000 - 25 + 1) + 25, random() * (5 - 25 + 1) + 25
 FROM counter
-ORDER BY id_article ASC;
+ORDER BY id_article;
 
 -- Reward
-DELETE FROM reward;
 INSERT INTO reward (id_reward, trophies_needed)
 SELECT DISTINCT id_reward, MAX(trophies_needed)
 FROM reward_aux
 GROUP BY id_reward;
 
 -- Friend
-DELETE FROM friend;
 INSERT INTO friend(id_player1, id_player2)
 SELECT requester, requested
 FROM friends_aux
@@ -1023,15 +960,13 @@ JOIN receiver AS r ON r.id = requested;
 DROP TABLE IF EXISTS receiver;
 
 -- Obtains
-DELETE FROM obtains;
-INSERT INTO obtains(id_success, id_player)
-SELECT pa.name, pa.player
+INSERT INTO obtains(id_success, id_player, date)
+SELECT pa.name, pa.player, pa.date
 FROM player_achievement_aux AS pa
 JOIN player AS p ON p.id_player = pa.player
 JOIN success AS s ON s.id_title = pa.name;
 
 -- Is found
-DELETE FROM is_found;
 INSERT INTO is_found(id_chest, id_mission)
 SELECT DISTINCT isf.chest, isf.mission
 FROM is_found_aux AS isf
@@ -1046,7 +981,6 @@ JOIN player AS p ON p.id_player = pp.player
 JOIN credit_card AS cc ON cc.number = pp.credit_card;*/
 
 -- Buys
-DELETE FROM buys;
 INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
 SELECT s.id_shop_name, '#LVRUV8YV', 'Knight', '2022-1-14 21:19:00'
 FROM shop AS s;
