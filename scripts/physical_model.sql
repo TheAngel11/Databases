@@ -417,8 +417,8 @@ CREATE TABLE chest (
     id_chest INTEGER PRIMARY KEY,
 	chest_name VARCHAR(100) NOT NULL,
     rarity VARCHAR(100) NOT NULL,
-    gold_contained INTEGER NOT NULL,
-    gems_contained INTEGER NOT NULL,
+    gold_contained INTEGER,
+    gems_contained INTEGER,
     unlocking_time INTEGER NOT NULL,
     FOREIGN KEY (rarity) REFERENCES rarity (degree),
     FOREIGN KEY (id_chest) REFERENCES article(id_article)
