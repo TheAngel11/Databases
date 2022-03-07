@@ -415,6 +415,7 @@ CREATE TABLE emoticon (
 DROP TABLE IF EXISTS chest CASCADE;
 CREATE TABLE chest (
     id_chest INTEGER PRIMARY KEY,
+	chest_name VARCHAR(100) NOT NULL,
     rarity VARCHAR(100) NOT NULL,
     gold_contained INTEGER NOT NULL,
     gems_contained INTEGER NOT NULL,
