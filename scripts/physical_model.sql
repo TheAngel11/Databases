@@ -38,7 +38,7 @@ CREATE TABLE shop (
 -- create table article -> article(id_article(PK), name, real_price, times_purchasable, id_shop_name(FK))
 DROP TABLE IF EXISTS article CASCADE;
 CREATE TABLE article (
-    id_article SERIAL PRIMARY KEY,
+    id_article INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     real_price FLOAT NOT NULL,
     times_purchasable INTEGER NOT NULL,
@@ -415,9 +415,10 @@ CREATE TABLE emoticon (
 DROP TABLE IF EXISTS chest CASCADE;
 CREATE TABLE chest (
     id_chest INTEGER PRIMARY KEY,
+	chest_name VARCHAR(100) NOT NULL,
     rarity VARCHAR(100) NOT NULL,
-    gold_contained INTEGER NOT NULL,
-    gems_contained INTEGER NOT NULL,
+    gold_contained INTEGER,
+    gems_contained INTEGER,
     unlocking_time INTEGER NOT NULL,
     FOREIGN KEY (rarity) REFERENCES rarity (degree),
     FOREIGN KEY (id_chest) REFERENCES article(id_article)
