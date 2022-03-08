@@ -396,6 +396,7 @@ DELIMITER ','
 CSV HEADER;
 
 -- DELETE PART 
+DELETE FROM pays;
 DELETE FROM buys;
 DELETE FROM is_found;
 DELETE FROM obtains;
@@ -498,7 +499,7 @@ SELECT DISTINCT player_quest_aux.quest_id, player_tag, quest_arena_aux.arena_id,
 FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = quest_arena_aux.quest_id;
 
 -- Credit Card
-INSERT INTO credit_card(number) SELECT  credit_card FROM player_purchases_aux;
+INSERT INTO credit_card(number) SELECT DISTINCT credit_card FROM player_purchases_aux;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
@@ -837,6 +838,7 @@ WHERE bundle_gold IS NOT NULL
 AND bundle_gems IS NOT NULL;
 
 -- Pays
+DELETE FROM pays;
 INSERT INTO pays(id_player, id_credit_card, id_article, datetime, discount)
 SELECT DISTINCT pp.player, pp.credit_card, pp.buy_id, pp.date, pp.discount
 FROM player_purchases_aux AS pp
@@ -875,14 +877,6 @@ INSERT INTO is_found(id_chest, id_mission)
 SELECT DISTINCT isf.chest, isf.mission
 FROM is_found_aux AS isf
 JOIN chest AS c ON c.id_chest = isf.chest;
-
--- Pays
-/*DELETE FROM pays;
-INSERT INTO pays(id_player, id_credit_card, datetime, discount)
-SELECT DISTINCT pp.player, pp.credit_card, pp.date, pp.discount
-FROM player_purchases_aux AS pp
-JOIN player AS p ON p.id_player = pp.player
-JOIN credit_card AS cc ON cc.number = pp.credit_card;*/
 
 -- Buys
 INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
