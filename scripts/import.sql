@@ -514,14 +514,12 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
-INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
-select * from frees;
+INSERT INTO frees(id_badge, id_player, id_sand, date) SELECT pa.name, pa.player, pa.arena, pa.date FROM player_badge_aux AS pa;
 
 --Clan_battle
 INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
 FROM clan_battle_aux AS cb;
-
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
 /* In the battle table we have:
@@ -529,7 +527,7 @@ FROM clan_battle_aux AS cb;
    - loser (references to player_deck_aux.deck) it is INTEGER
    We need to fill this table with the winner and the loser with the player ids. So the result may be:
  */
-UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
+-- UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
 INSERT INTO battle (datetime, duration, points, trophies_played, gold_played, winner, loser, clan_battle)
 SELECT DISTINCT battle_aux.date,
                 battle_aux.duration,

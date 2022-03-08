@@ -235,7 +235,7 @@ CREATE TABLE takes_place (
     FOREIGN KEY (id_sand) REFERENCES sand (id),
     FOREIGN KEY (id_season) REFERENCES season (id_name),
     PRIMARY KEY (id_battle, datetime)
-); 
+);
 
 
 DROP TABLE IF EXISTS fight CASCADE;
@@ -508,6 +508,7 @@ CREATE TABLE frees (
     id_badge VARCHAR(100) NOT NULL,
     id_player VARCHAR(100) NOT NULL,
     id_sand INTEGER NOT NULL,
+    date DATE NOT NULL,
     FOREIGN KEY (id_badge) REFERENCES badge (id_title),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
     FOREIGN KEY (id_sand) REFERENCES sand (id),
