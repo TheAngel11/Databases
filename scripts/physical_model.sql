@@ -154,9 +154,7 @@ CREATE TABLE "group" (
 -- create table credit_card -> credit_card(id_credit_card(PK), datetime, number)
 DROP TABLE IF EXISTS credit_card CASCADE;
 CREATE TABLE credit_card (
-    id_credit_card SERIAL PRIMARY KEY,
-    datetime DATE NOT NULL,
-    number BIGINT NOT NULL
+    number BIGINT PRIMARY KEY 
 );
 
 -- create table reward -> reward(id_reward(PK), trophies_needed)
@@ -407,6 +405,7 @@ CREATE TABLE bundle (
 DROP TABLE IF EXISTS emoticon CASCADE;
 CREATE TABLE emoticon (
     id_emoticon INTEGER PRIMARY KEY,
+    emoticon_name VARCHAR(100) NOT NULL,
     "path" VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_emoticon) REFERENCES article(id_article)
 );
@@ -428,14 +427,14 @@ CREATE TABLE chest (
 DROP TABLE IF EXISTS pays CASCADE;
 CREATE TABLE pays (
     id_player VARCHAR(100) NOT NULL,
-    id_credit_card INTEGER NOT NULL,
+    id_credit_card BIGINT NOT NULL,
     id_article INTEGER NOT NULL,
     datetime TIMESTAMP NOT NULL,
     discount FLOAT NOT NULL,
     FOREIGN KEY (id_player) REFERENCES player (id_player),
-    FOREIGN KEY (id_credit_card) REFERENCES credit_card (id_credit_card),
+    FOREIGN KEY (id_credit_card) REFERENCES credit_card (number),
     FOREIGN KEY (id_article) REFERENCES article (id_article),
-    PRIMARY KEY (id_player, id_credit_card, id_article)
+    PRIMARY KEY (id_player, id_credit_card, id_article, datetime)
 );
 
 -- create table buys -> buys(id_shop_name(PK/FK), id_player(PK/FK), id_card_name(PK/FK), datetime)
