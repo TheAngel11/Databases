@@ -481,8 +481,7 @@ INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achie
 
 -- Mission
 -- mission(id_mission(PK), task_description)
-INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux;
-
+INSERT INTO mission(id_mission, title, task_description) SELECT DISTINCT quest_id, quest_title, quest_requirement  FROM player_quest_aux;
 -- Depends
 -- A mission CAN depend on another one
 -- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
