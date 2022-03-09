@@ -175,6 +175,7 @@ CREATE TABLE success (
 DROP TABLE IF EXISTS mission CASCADE;
 CREATE TABLE mission (
     id_mission SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
     task_description VARCHAR(255) NOT NULL
 );
 
