@@ -1,61 +1,17 @@
 -- Set 4 [M'agrada la competició. M'agraden els reptes...]
 
-/*CREATE TABLE battle (
-    id_battle SERIAL PRIMARY KEY,
-    winner VARCHAR(100) NOT NULL,
-    loser VARCHAR(100) NOT NULL,
-    datetime DATE NOT NULL,
-    duration TIME NOT NULL,
-    points INTEGER NOT NULL,
-    trophies_played INTEGER NOT NULL,
-    gold_played INTEGER NOT NULL,
-	clan_battle INTEGER,
-	FOREIGN KEY (clan_battle) REFERENCES clan_battle (clan_battle),
-    FOREIGN KEY (winner) REFERENCES player (id_player),
-    FOREIGN KEY (loser) REFERENCES player (id_player)
-);
+-- 1. Enumera el nom, els trofeus mínims, els trofeus màxims de les arenes que el seu títol
+-- comença per "A" i tenen un paquet d’arena amb or superior a 8000.
+SELECT DISTINCT max_trophies, min_trophies FROM sand
+    INNER JOIN belongs b on sand.id = b.id_sand
+    INNER JOIN sand_pack sp on b.id_sand_pack = sp.id_sand_pack
+    WHERE b.gold_contained > 8000 AND sand.title LIKE 'A%';
 
-CREATE TABLE takes_place (
-    id_battle INTEGER NOT NULL,
-    id_sand INTEGER NOT NULL,
-    id_season VARCHAR(100) NOT NULL,
-    datetime DATE NOT NULL,
-    FOREIGN KEY (id_battle) REFERENCES battle (id_battle),
-    FOREIGN KEY (id_sand) REFERENCES sand (id),
-    FOREIGN KEY (id_season) REFERENCES season (id_name),
-    PRIMARY KEY (id_battle, datetime)
-);
-
-CREATE TABLE sand (
-    id INTEGER PRIMARY KEY,
-    title VARCHAR(255),
-    max_trophies INTEGER NOT NULL,
-    min_trophies INTEGER NOT NULL,
-    reward_in_exp INTEGER NOT NULL,
-    reward_in_gold INTEGER NOT NULL
-);
-
-CREATE TABLE season (
-    id_name VARCHAR(100) PRIMARY KEY,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL
-);
-
-CREATE TABLE player (
-    id_player VARCHAR(100) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    exp INTEGER NOT NULL,
-    trophies INTEGER NOT NULL,
-    gold INTEGER NOT NULL,
-    gems INTEGER NOT NULL
-);*/
-
--- 1. TODO
 -- 2. TODO
 
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
-SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points, season.start_date, season.end_date
+SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points
 FROM takes_place
 INNER JOIN battle ON takes_place.id_battle = battle.id_battle
 INNER JOIN season ON takes_place.id_season = season.id_name
@@ -86,3 +42,30 @@ WHERE player.exp > 290000 AND card.id_card_name IN
     (SELECT id_card_name FROM card INNER JOIN sand s on card.sand = s.id WHERE s.title LIKE 'A%')
 AND player.id_player IN
     (SELECT DISTINCT id_player FROM player INNER JOIN owns ON player.id_player = owns.player WHERE owns.card LIKE 'Lava%');
+
+-- 6.Donar el nom de les missions que donen recompenses a totes les arenes el títol de les
+-- quals comença per "t" o acaba per "a". Ordena el resultat pel nom de la missió.
+SELECT DISTINCT m.title FROM sand
+    INNER JOIN accepts a ON sand.id = a.id_sand
+    INNER JOIN mission m ON a.id_mission = m.id_mission
+WHERE sand.title LIKE 't%' OR sand.title LIKE '%a'
+ORDER BY m.title;
+
+-- 7. Donar el nom de les arenes amb jugadors que al novembre o desembre de 2021 van
+-- obtenir insígnies si el nom de l’arena conté la paraula "Lliga", i les arenes tenen jugadors
+-- que al 2021 van obtenir èxits el nom dels quals conté la paraula "Friend".
+-- TODO: ASK WHY THERE IS ANY SAND WITH "Lliga" AND "Friend"
+SELECT * FROM sand WHERE sand.title LIKE '%Lliga%'; -- 0 results
+SELECT * FROM sand WHERE sand.title LIKE '%Friend%'; -- 0 results
+
+-- 8. Retorna el nom de les cartes que pertanyen a jugadors que van completar missions el
+-- nom de les quals inclou la paraula "Armer" i l'or de la missió és més gran que l'or mitjà
+-- recompensat en totes les missions de les arenes.
+SELECT * FROM player
+    INNER JOIN owns o ON player.id_player = o.player
+    INNER JOIN card c ON o.card = c.id_card_name
+    INNER JOIN accepts a on player.id_player = a.id_player
+    INNER JOIN mission m on a.id_mission = m.id_mission
+    INNER JOIN sand s on a.id_sand = s.id
+WHERE s.reward_in_gold > (SELECT AVG(sand.reward_in_gold) FROM sand INNER JOIN accepts a on sand.id = a.id_sand)
+AND m.title LIKE '%Armer%'; -- TODO: ask why there are no results
