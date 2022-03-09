@@ -55,12 +55,12 @@ CREATE TABLE player (
 
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
--- TODO; where date(datetime) between '2019-01-01' and '2019-12-31'
-SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points
+SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points, season.start_date, season.end_date
 FROM takes_place
 INNER JOIN battle ON takes_place.id_battle = battle.id_battle
 INNER JOIN season ON takes_place.id_season = season.id_name
 INNER JOIN player ON battle.winner = player.id_player
+WHERE season.start_date <= '2019-12-31' AND season.end_date >= '2019-01-01'
 GROUP BY season.id_name, player.id_player, player.name
 ORDER BY total_points DESC;
 
