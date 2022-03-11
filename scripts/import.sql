@@ -432,6 +432,7 @@ DELETE FROM building;
 DELETE FROM takes_place;
 DELETE FROM frees;
 DELETE FROM badge;
+DELETE FROM possesses;
 DELETE FROM credit_card;
 DELETE FROM accepts;
 DELETE FROM depends;
@@ -499,6 +500,9 @@ FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = 
 
 -- Credit Card
 INSERT INTO credit_card(number) SELECT DISTINCT credit_card FROM player_purchases_aux;
+
+-- Possesses
+INSERT INTO possesses(card_number, id_player) SELECT DISTINCT credit_card, player FROM player_purchases_aux;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
