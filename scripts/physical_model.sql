@@ -515,3 +515,24 @@ CREATE TABLE frees (
     FOREIGN KEY (id_sand) REFERENCES sand (id),
     PRIMARY KEY (id_badge, id_player)
 );
+
+DROP TABLE IF EXISTS frees CASCADE;
+CREATE TABLE frees (
+    id_badge VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
+    id_sand INTEGER NOT NULL,
+    date DATE NOT NULL,
+    FOREIGN KEY (id_badge) REFERENCES badge (id_title),
+    FOREIGN KEY (id_player) REFERENCES player (id_player),
+    FOREIGN KEY (id_sand) REFERENCES sand (id),
+    PRIMARY KEY (id_badge, id_player)
+);
+
+DROP TABLE IF EXISTS possesses CASCADE;
+CREATE TABLE possesses (
+	card_number BIGINT NOT NULL,
+	id_player VARCHAR(100) NOT NULL,
+	FOREIGN KEY (card_number) REFERENCES credit_card(number),
+	FOREIGN KEY (id_player) REFERENCES player(id_player),
+	PRIMARY KEY (card_number, id_player)
+);
