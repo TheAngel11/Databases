@@ -315,18 +315,16 @@ CREATE TABLE requires (
 );
 
 
--- create table modify -> modify(id_clan(PK/FK), card_name(PK/FK), id_modifier(PK/FK), amount_donations)
-DROP TABLE IF EXISTS modify CASCADE;
-CREATE TABLE modify (
+-- Investigates
+DROP TABLE IF EXISTS investigates CASCADE;
+CREATE TABLE investigates (
     id_clan VARCHAR(100) NOT NULL,
-    card_name VARCHAR(100) NOT NULL,
     name_modifier VARCHAR(100) NOT NULL,
     "level" INTEGER NOT NULL,
     "date" DATE NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
-    FOREIGN KEY (card_name) REFERENCES card (id_card_name),
     FOREIGN KEY (name_modifier) REFERENCES modifier (name_modifier),
-    PRIMARY KEY (id_clan, card_name, name_modifier)
+    PRIMARY KEY (id_clan, name_modifier)
 );
 
 -- create table joins -> joins(id_clan(PK/FK), id_player(PK/FK), id_role(PK/FK), datetime_in, datetime_out)
