@@ -661,99 +661,16 @@ INSERT INTO requires(id_technology, pre_technology, previous_level)
 SELECT te.technology, te.prerequisite, te.prereq_level FROM technology_aux AS te
 WHERE te.prerequisite is not null;
 
----MODIFY
--- TOTES LES CARTES
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_spawn_damage is  null
-AND bu.mod_radius is  null
-AND bu.mod_lifetime is  null
-;
+--Investigates (clan - modifier)
+INSERT INTO investigates(id_clan,name_modifier, level, date)
+SELECT cst.clan, cst.structure, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst
+WHERE cst.structure IS NOT NULL;
 
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_spawn_damage is  null
-AND te.mod_radius is  null
-AND te.mod_lifetime is  null
-;
-
----TROOP
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN troop AS tr ON o.card = tr.troop_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_spawn_damage is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN troop AS tr ON o.card = tr.troop_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_spawn_damage is not null
-;
-
----BUILDING
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building AS b ON o.card = b.building_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_lifetime is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building AS b ON o.card = b.building_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_lifetime is not null 
-;
-
----ENCHANTMENT
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN enchantment AS en ON o.card = en.enchantment_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_radius is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN enchantment AS en ON o.card = en.enchantment_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_radius is not null ;
+INSERT INTO investigates(id_clan, name_modifier, level, date)
+SELECT cst.clan, cst.tech, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst
+WHERE cst.tech IS NOT NULL;
 
 -- IMPORTS ARNAU
 
