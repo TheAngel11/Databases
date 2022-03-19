@@ -396,6 +396,7 @@ DELIMITER ','
 CSV HEADER;
 
 -- DELETE PART 
+DELETE FROM pays;
 DELETE FROM buys;
 DELETE FROM is_found;
 DELETE FROM obtains;
@@ -431,6 +432,7 @@ DELETE FROM building;
 DELETE FROM takes_place;
 DELETE FROM frees;
 DELETE FROM badge;
+DELETE FROM possesses;
 DELETE FROM credit_card;
 DELETE FROM accepts;
 DELETE FROM depends;
@@ -480,8 +482,7 @@ INSERT INTO gets(id_success, id_player) SELECT name, pa.player FROM player_achie
 
 -- Mission
 -- mission(id_mission(PK), task_description)
-INSERT INTO mission(id_mission, task_description) SELECT DISTINCT quest_id, quest_requirement FROM player_quest_aux;
-
+INSERT INTO mission(id_mission, title, task_description) SELECT DISTINCT quest_id, quest_title, quest_requirement  FROM player_quest_aux;
 -- Depends
 -- A mission CAN depend on another one
 -- Keep in consider that id_mission_1 and id_mission_2 ARE NOT FK's because it is optional so it would violate not-null constraint.
@@ -498,10 +499,10 @@ SELECT DISTINCT player_quest_aux.quest_id, player_tag, quest_arena_aux.arena_id,
 FROM player_quest_aux INNER JOIN quest_arena_aux ON player_quest_aux.quest_id = quest_arena_aux.quest_id;
 
 -- Credit Card
--- Explanation: the id is not here because id_credit_card is a SERIAL type although a card number is already unique.
--- The date, as I have supposed, is the expiration date of the card, but that field is not in the importation data, so I have filled it with the purchase date.
--- Is not a good way to do so, but the field is there and we have to fill out with any value. We can not store empty data. Fault of us.
-INSERT INTO credit_card(datetime, number) SELECT  date, credit_card FROM player_purchases_aux;
+INSERT INTO credit_card(number) SELECT DISTINCT credit_card FROM player_purchases_aux;
+
+-- Possesses
+INSERT INTO possesses(card_number, id_player) SELECT DISTINCT credit_card, player FROM player_purchases_aux;
 
 -- Badge
 -- Explanation: the table player_badge has all the badges that a player has, but in the table badge we have all the badges that exist in the game.
@@ -514,14 +515,12 @@ INSERT INTO badge(id_title, image_path) SELECT DISTINCT cb.badge, cb.url FROM cl
 
 -- Frees
 -- Explanation: not a lot of things to explain here, basically we are making the union of the badges that a player has released within a sand.
-INSERT INTO frees(id_badge, id_player, id_sand) SELECT pa.name, pa.player, pa.arena FROM player_badge_aux AS pa;
-select * from frees;
+INSERT INTO frees(id_badge, id_player, id_sand, date) SELECT pa.name, pa.player, pa.arena, pa.date FROM player_badge_aux AS pa;
 
 --Clan_battle
 INSERT INTO clan_battle(clan_battle, start_date, end_date)
 SELECT DISTINCT cb.battle, cb.start_date, cb.end_date
 FROM clan_battle_aux AS cb;
-
 -- Battle
 -- Explanation: we have datetime and duration given from the auxiliary table. For points we have selected 'winner', for trophies_played and gold_played we have generated random values.
 /* In the battle table we have:
@@ -529,7 +528,7 @@ FROM clan_battle_aux AS cb;
    - loser (references to player_deck_aux.deck) it is INTEGER
    We need to fill this table with the winner and the loser with the player ids. So the result may be:
  */
-UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
+-- UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
 INSERT INTO battle (datetime, duration, points, trophies_played, gold_played, winner, loser, clan_battle)
 SELECT DISTINCT battle_aux.date,
                 battle_aux.duration,
@@ -662,99 +661,16 @@ INSERT INTO requires(id_technology, pre_technology, previous_level)
 SELECT te.technology, te.prerequisite, te.prereq_level FROM technology_aux AS te
 WHERE te.prerequisite is not null;
 
----MODIFY
--- TOTES LES CARTES
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_spawn_damage is  null
-AND bu.mod_radius is  null
-AND bu.mod_lifetime is  null
-;
+--Investigates (clan - modifier)
+INSERT INTO investigates(id_clan,name_modifier, level, date)
+SELECT cst.clan, cst.structure, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst
+WHERE cst.structure IS NOT NULL;
 
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_spawn_damage is  null
-AND te.mod_radius is  null
-AND te.mod_lifetime is  null
-;
-
----TROOP
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN troop AS tr ON o.card = tr.troop_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_spawn_damage is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN troop AS tr ON o.card = tr.troop_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_spawn_damage is not null
-;
-
----BUILDING
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building AS b ON o.card = b.building_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_lifetime is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN building AS b ON o.card = b.building_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_lifetime is not null 
-;
-
----ENCHANTMENT
---Structure
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.structure, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN enchantment AS en ON o.card = en.enchantment_name
-JOIN building_aux AS bu ON cst.structure = bu.building
-WHERE cst.structure is not null
-AND bu.mod_radius is not null
-;
-
---Technology
-INSERT INTO modify(id_clan, name_modifier, card_name, level, date)
-SELECT DISTINCT cst.clan, cst.tech, o.card, cst.level, cst.date
-FROM clan_tech_structure_aux AS cst JOIN joins AS j ON cst.clan = j.id_clan
-JOIN owns AS o ON j.id_player = o.player
-JOIN enchantment AS en ON o.card = en.enchantment_name
-JOIN technology_aux AS te ON cst.tech = te.technology
-WHERE cst.tech is not null
-AND te.mod_radius is not null ;
+INSERT INTO investigates(id_clan, name_modifier, level, date)
+SELECT cst.clan, cst.tech, cst.level, cst.date
+FROM clan_tech_structure_aux AS cst
+WHERE cst.tech IS NOT NULL;
 
 -- IMPORTS ARNAU
 
@@ -807,142 +723,52 @@ DELETE FROM chest;
 DELETE FROM emoticon;
 DELETE FROM article;
 
--- Sand_pack
--- auxiliar relation counter
-DROP TABLE IF EXISTS counter;
-CREATE TABLE counter(
-	id_article SERIAL,
-	id_sand_pack INTEGER,
-	max_article INTEGER
-);
+INSERT INTO article(id_article, name, real_price, times_purchasable, id_shop_name)
+SELECT DISTINCT pp.buy_id, pp.buy_name, pp.buy_cost, pp.buy_stock, shop.id_shop_name
+FROM player_purchases_aux AS pp, shop;
 
-INSERT INTO counter (id_sand_pack, max_article)
-SELECT pp.arenapack_id, MAX(a.id_article)
-FROM player_purchases_aux AS pp,
-article AS a
-WHERE pp.arenapack_id is not null
-GROUP BY pp.arenapack_id, a.id_article
-ORDER BY pp.arenapack_id ASC;
-
-INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
-SELECT 'SAND_PACK', MAX(pp.buy_cost), SUM(pp.buy_stock), s.id_shop_name
-FROM player_purchases_aux AS pp,
-shop AS s
-WHERE pp.arenapack_id is not null
-GROUP BY pp.arenapack_id, s.id_shop_name
-ORDER BY pp.arenapack_id ASC;
-
--- hemos quitado el campo gems_contained de la tabla sand_pack
-INSERT INTO sand_pack (id_sand_pack)
-SELECT id_article + max_article
-FROM counter
-ORDER BY id_article ASC;
-
-INSERT INTO belongs (id_sand_pack, id_sand, gold_contained)
-SELECT c.id_article + c.max_article, sp.arena, sp.gold
-FROM sand_pack_aux AS sp,
-counter AS c
-WHERE c.id_sand_pack = sp.id;
-
-DROP TABLE IF EXISTS counter;
-
--- Bundle
-DROP TABLE IF EXISTS counter;
-CREATE TABLE counter(
-	id_article SERIAL,
-	num_sand_pack INTEGER,
-	buy_cost FLOAT,
-	gold INTEGER,
-	gems INTEGER
-);
-
-INSERT INTO counter (num_sand_pack, buy_cost, gold, gems)
-SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.bundle_gold, pp.bundle_gems
-FROM player_purchases_aux AS pp,
-article AS a
-WHERE pp.bundle_gold is not null
-GROUP BY pp.buy_cost, pp.bundle_gold, pp.bundle_gems
-ORDER BY pp.buy_cost ASC;
-
-INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
-SELECT DISTINCT 'BUNDLE', pp.buy_cost, pp.buy_stock, s.id_shop_name 
-FROM player_purchases_aux AS pp,
-shop AS s
-WHERE pp.bundle_gold is not null
-ORDER BY pp.buy_cost ASC;
-
-INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
-SELECT id_article + num_sand_pack, gold, gems
-FROM counter
-ORDER BY id_article ASC;
-
--- Emoticon
-DROP TABLE IF EXISTS counter;
-CREATE TABLE counter(
-	id_article SERIAL,
-	num_articles INTEGER,
-	buy_cost FLOAT,
-	path VARCHAR(255)
-);
-
-INSERT INTO counter (num_articles, buy_cost, path)
-SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.emote_path
-FROM player_purchases_aux AS pp,
-article AS a
-WHERE pp.emote_name is not null
-AND pp.emote_path is not null
-GROUP BY pp.buy_cost, pp.emote_path
-ORDER BY pp.buy_cost ASC;
-
-INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
-SELECT DISTINCT pp.emote_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
-FROM player_purchases_aux AS pp,
-shop AS s
-WHERE pp.emote_name is not null
-AND pp.emote_path is not null
-ORDER BY pp.buy_cost ASC;
-
-INSERT INTO emoticon(id_emoticon, path)
-SELECT id_article + num_articles, path
-FROM counter
-ORDER BY id_article ASC;
+-- Sand pack
+INSERT INTO sand_pack(id_sand_pack) 
+SELECT DISTINCT buy_id FROM player_purchases_aux AS pp
+WHERE pp.arenapack_id IS NOT NULL;
 
 -- Chest
-DROP TABLE IF EXISTS counter;
-CREATE TABLE counter(
-	id_article SERIAL,
-	num_articles INTEGER,
-	buy_cost FLOAT,
-	chest_rarity VARCHAR(255),
-	chest_unlock_time INTEGER,
-	chest_num_cards VARCHAR(255)
-);
+INSERT INTO chest(id_chest, chest_name, rarity, unlocking_time)
+SELECT DISTINCT buy_id, chest_name, chest_rarity, chest_unlock_time
+FROM player_purchases_aux
+WHERE chest_name IS NOT NULL
+AND chest_rarity IS NOT NULL
+AND chest_unlock_time IS NOT NULL;
 
-INSERT INTO counter (num_articles, buy_cost, chest_rarity, chest_unlock_time, chest_num_cards)
-SELECT DISTINCT MAX(a.id_article), pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
-FROM player_purchases_aux AS pp,
-article AS a
-WHERE pp.chest_rarity is not null
-AND pp.chest_name is not null
-AND pp.chest_unlock_time is not null
-AND pp.chest_num_cards is not null
-GROUP BY pp.buy_cost, pp.chest_rarity, pp.chest_unlock_time, pp.chest_num_cards
-ORDER BY pp.buy_cost;
+UPDATE chest
+SET gold_contained = random() * (1000 - 25 + 1) + 25, gems_contained = random() * (5 - 25 + 1) + 25;
 
-INSERT INTO article(name, real_price, times_purchasable, id_shop_name)
-SELECT DISTINCT pp.chest_name, pp.buy_cost, pp.buy_stock, s.id_shop_name 
-FROM player_purchases_aux AS pp,
-shop AS s
-WHERE pp.chest_name is not null
-AND pp.chest_rarity is not null
-AND pp.chest_unlock_time is not null
-AND pp.chest_num_cards is not null
-ORDER BY pp.buy_cost;
+-- Emote
+INSERT INTO emoticon(id_emoticon, emoticon_name, path)
+SELECT DISTINCT buy_id, emote_name, emote_path
+FROM player_purchases_aux
+WHERE emote_path IS NOT NULL
+AND emote_name IS NOT NULL;
 
-INSERT INTO chest(id_chest, rarity, unlocking_time, gold_contained, gems_contained)
-SELECT id_article + num_articles, chest_rarity, chest_unlock_time, random() * (1000 - 25 + 1) + 25, random() * (5 - 25 + 1) + 25
-FROM counter
-ORDER BY id_article;
+-- Bundle
+INSERT INTO bundle(id_bundle, gold_contained, gems_contained)
+SELECT DISTINCT buy_id, bundle_gold, bundle_gems
+FROM player_purchases_aux
+WHERE bundle_gold IS NOT NULL
+AND bundle_gems IS NOT NULL;
+
+-- Pays
+DELETE FROM pays;
+INSERT INTO pays(id_player, id_credit_card, id_article, datetime, discount)
+SELECT DISTINCT pp.player, pp.credit_card, pp.buy_id, pp.date, pp.discount
+FROM player_purchases_aux AS pp
+JOIN credit_card ON credit_card.number = pp.credit_card;
+
+-- Belongs
+INSERT INTO belongs(id_sand_pack, id_sand, gold_contained)
+SELECT DISTINCT pp.buy_id, sp.arena, sp.gold
+FROM sand_pack_aux AS sp
+JOIN player_purchases_aux AS pp ON pp.arenapack_id = sp.id;
 
 -- Reward
 INSERT INTO reward (id_reward, trophies_needed)
@@ -971,14 +797,6 @@ INSERT INTO is_found(id_chest, id_mission)
 SELECT DISTINCT isf.chest, isf.mission
 FROM is_found_aux AS isf
 JOIN chest AS c ON c.id_chest = isf.chest;
-
--- Pays
-/*DELETE FROM pays;
-INSERT INTO pays(id_player, id_credit_card, datetime, discount)
-SELECT DISTINCT pp.player, pp.credit_card, pp.date, pp.discount
-FROM player_purchases_aux AS pp
-JOIN player AS p ON p.id_player = pp.player
-JOIN credit_card AS cc ON cc.number = pp.credit_card;*/
 
 -- Buys
 INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
