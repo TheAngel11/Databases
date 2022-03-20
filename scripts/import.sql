@@ -410,7 +410,7 @@ DELETE FROM sand_pack;
 DELETE FROM article;
 DELETE FROM shop;
 DELETE FROM message;
-DELETE FROM modify;
+DELETE FROM investigates;
 DELETE FROM requires;
 DELETE FROM need;
 DELETE FROM technology;
