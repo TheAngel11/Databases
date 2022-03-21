@@ -1,8 +1,9 @@
 -- Set 5 [Preguntes creuades]
 
 -- 3. Llistar els 10 primers jugadors amb experiència superior a 100.000 que han creat més
--- Creuada 1
---Select
+-- Creuada 1 :Mostrar el nombre de jugadors que té cada clan, però només considerant els jugadors 
+--amb nom de rol que contingui el text "elder". Restringir la sortida per als 5 primers clans
+--amb més jugadors.
 SELECT COUNT(j.id_player) AS num_players
 FROM joins AS j 
 WHERE j.id_role =
@@ -47,8 +48,9 @@ GROUP BY p.id_player, p.name, p.exp
 ORDER BY stacks_created DESC
 LIMIT 10;
 
---Creuada 5: id_batalla+ duracio + start_date + end_date
--- on la descripcio no contingui Chuck Noris + durada < AVG(durada)
+--Creuada 5: Mostrar la identificació de les batalles, la durada, la data d'inici i la data 
+--de finalització dels clans que la seva descripció no contingui el text "Chuck Norris". 
+--Considera només les batalles amb una durada inferior a la durada mitjana de totes les batalles.
 
 SELECT b.id_battle, b.duration, cb.start_date, cb.end_date
 FROM battle AS b JOIN clan_battle AS cb ON b.clan_battle = cb.clan_battle
@@ -71,16 +73,40 @@ WHERE f.id_clan NOT IN (SELECT id_clan FROM clan WHERE description LIKE '%Chuck 
 AND b.duration < (SELECT AVG(duration) FROM battle);
 
 
---Creuada 6: nom + exp de player + amb clan amb tecnologia Militar + comprar
---TO DO: Add buy part
+--Creuada 6: Enumerar el nom i l'experiència dels jugadors que pertanyen a un clan que 
+--té una tecnologia el nom del qual conté la paraula "Militar" i aquests jugadors havien 
+--comprat el 2021 més de 5 articles.
+
 SELECT p.id_player, p.exp
 FROM player AS p JOIN joins AS j ON p.id_player = j.id_player
 WHERE id_clan IN
-	(SELECT DISTINCT m.id_clan
-	FROM modify AS m JOIN technology AS t 
-	ON m.name_modifier = t.name_technology
-	WHERE m.name_modifier LIKE '%Militar%')
-ORDER BY p.exp DESC;
+	(SELECT DISTINCT inv.id_clan
+	FROM investigates AS inv JOIN technology AS t 
+	ON inv.name_modifier = t.name_technology
+	WHERE inv.name_modifier LIKE '%Militar%')
+AND p.id_player IN 
+	(SELECT id_player FROM pays
+	WHERE '2021' = EXTRACT(YEAR FROM datetime)
+	GROUP BY id_player HAVING COUNT(id_article) > 5);
+	
+--Validació
+
+SELECT id_player, COUNT(id_article) FROM pays
+WHERE '2021' = EXTRACT(YEAR FROM datetime)
+GROUP BY id_player 
+ORDER BY COUNT(id_article) DESC;
+
+SELECT DISTINCT inv.id_clan
+FROM investigates AS inv JOIN technology AS t 
+ON inv.name_modifier = t.name_technology
+WHERE inv.name_modifier LIKE '%Militar%';
+
+SELECT id_clan, id_player
+FROM joins 
+WHERE id_player IN 
+	(SELECT id_player FROM pays
+	WHERE '2021' = EXTRACT(YEAR FROM datetime)
+	GROUP BY id_player HAVING COUNT(id_article) > 5);
 
 -- 7. Indiqueu el nom dels jugadors que tenen 
 -- totes les cartes amb el major valor de dany.
