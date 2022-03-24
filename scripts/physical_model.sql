@@ -250,7 +250,7 @@ CREATE TABLE fight (
 DROP TABLE IF EXISTS badge CASCADE;
 CREATE TABLE badge (
     id_title VARCHAR(100) PRIMARY KEY,
-    image_path VARCHAR(255) NOT NULL
+    image_path VARCHAR(255)
 );
 
 -- create table win -> win(id_clan(PK/FK), id_battle(PK/FK), id_title(PK/FK))
