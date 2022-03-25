@@ -821,8 +821,6 @@ INSERT INTO mission (id_mission, title, task_description) VALUES (202, 'Armer Tw
 INSERT INTO mission (id_mission, title, task_description) VALUES (203, 'Armer Three', 450);
 INSERT INTO mission (id_mission, title, task_description) VALUES (204, 'Armer Four', 720);
 
-SELECT id_mission FROM mission WHERE title LIKE 'Armer One' LIMIT 1;
-
 -- insert into accepts
 INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (201, '#Y08PCY8P2', 54000004, true);
 INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (202,'#2YCJRP9Q0', 54000004, true);
