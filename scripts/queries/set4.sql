@@ -91,11 +91,14 @@ SELECT * FROM sand WHERE sand.id IN (
 -- 8. Retorna el nom de les cartes que pertanyen a jugadors que van completar missions el
 -- nom de les quals inclou la paraula "Armer" i l'or de la missió és més gran que l'or mitjà
 -- recompensat en totes les missions de les arenes.
-SELECT * FROM player
-    INNER JOIN owns o ON player.id_player = o.player
-    INNER JOIN card c ON o.card = c.id_card_name
-    INNER JOIN accepts a on player.id_player = a.id_player
-    INNER JOIN mission m on a.id_mission = m.id_mission
-    INNER JOIN sand s on a.id_sand = s.id
-WHERE s.reward_in_gold > (SELECT AVG(sand.reward_in_gold) FROM sand INNER JOIN accepts a on sand.id = a.id_sand)
-AND m.title LIKE '%Armer%'; -- TODO: ask why there are no results
+SELECT DISTINCT c.id_card_name FROM card c
+    INNER JOIN owns o on c.id_card_name = o.card
+    INNER JOIN player p on o.player = p.id_player
+WHERE id_player IN (
+    SELECT a.id_player FROM player p
+    INNER JOIN accepts a on p.id_player = a.id_player
+    INNER JOIN mission m ON a.id_mission = m.id_mission
+    INNER JOIN sand s ON s.id = a.id_sand
+WHERE s.reward_in_gold > (SELECT AVG(sand.reward_in_gold) FROM sand)
+AND m.title LIKE '%Armer%'
+    );
