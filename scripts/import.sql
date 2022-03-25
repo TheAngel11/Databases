@@ -802,3 +802,15 @@ JOIN chest AS c ON c.id_chest = isf.chest;
 INSERT INTO buys(id_shop_name, id_player, id_card_name, datetime)
 SELECT s.id_shop_name, '#LVRUV8YV', 'Knight', '2022-1-14 21:19:00'
 FROM shop AS s;
+
+-- Adding extra data
+
+-- insert one sand manually
+INSERT INTO sand(id, title, max_trophies, min_trophies, reward_in_exp, reward_in_gold)
+VALUES (54000059, 'Lliga Legendaria', 35827, 238, 150395, 234);
+
+-- insert into frees manually
+INSERT INTO frees (id_badge, id_player, id_sand, date) VALUES ('Played3Years', '#Y08PCY8P2', 54000059, '2021-10-22');
+
+-- insert into success manually
+INSERT INTO success (id_title, gems_reward) VALUES ('I like my friends', 190);
