@@ -72,9 +72,21 @@ ORDER BY m.title;
 -- 7. Donar el nom de les arenes amb jugadors que al novembre o desembre de 2021 van
 -- obtenir insígnies si el nom de l’arena conté la paraula "Lliga", i les arenes tenen jugadors
 -- que al 2021 van obtenir èxits el nom dels quals conté la paraula "Friend".
--- TODO: ASK WHY THERE IS ANY SAND WITH "Lliga" AND "Friend"
-SELECT * FROM sand WHERE sand.title LIKE '%Lliga%'; -- 0 results
-SELECT * FROM sand WHERE sand.title LIKE '%Friend%'; -- 0 results
+SELECT * FROM sand WHERE sand.id IN (
+    SELECT s.id FROM sand s INNER JOIN frees f on s.id = f.id_sand
+    WHERE date > TO_DATE('30/09/2021', 'DD/MM/YYYY')
+      AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+        AND s.title LIKE '%Lliga%') AND sand.id IN (
+            SELECT DISTINCT id_sand FROM frees f
+                INNER JOIN sand s ON f.id_sand = s.id
+            WHERE f.id_player IN (
+                SELECT player.id_player
+                FROM player
+                    INNER JOIN obtains o on player.id_player = o.id_player
+                WHERE date > TO_DATE('31/12/2020', 'DD/MM/YYYY')
+                    AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+                AND o.id_success LIKE '%Friend%'
+        ));
 
 -- 8. Retorna el nom de les cartes que pertanyen a jugadors que van completar missions el
 -- nom de les quals inclou la paraula "Armer" i l'or de la missió és més gran que l'or mitjà
