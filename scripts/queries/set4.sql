@@ -19,12 +19,13 @@ SELECT DISTINCT max_trophies, min_trophies FROM sand
 -- 2. Llista de nom, data d'inici, data de finalització de les temporades i, de les batalles
 -- d'aquestes temporades, el nom del jugador guanyador si el jugador té més victòries que
 -- derrotes i la seva experiència és més gran de 200.000
-SELECT DISTINCT s.id_name AS season_name, s.start_date, s.end_date, p.name FROM battle
+SELECT DISTINCT s.id_name AS season_name, s.start_date, s.end_date, p.name AS player FROM battle
     INNER JOIN takes_place tp on battle.id_battle = tp.id_battle
     INNER JOIN season s on tp.id_season = s.id_name
     INNER JOIN player p ON p.id_player = battle.winner OR p.id_player = battle.loser
 WHERE p.exp > 200000
-GROUP BY p.id_player, s.id_name, s.start_date, s.end_date;
+GROUP BY p.name, s.id_name, s.start_date, s.end_date
+HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
 
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
