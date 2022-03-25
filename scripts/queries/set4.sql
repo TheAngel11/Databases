@@ -26,14 +26,6 @@ SELECT DISTINCT s.id_name AS season_name, s.start_date, s.end_date, p.name FROM 
 WHERE p.exp > 200000
 GROUP BY p.id_player, s.id_name, s.start_date, s.end_date;
 
---select the players with their wins and loses
-SELECT player.id_player, COUNT(DISTINCT battle.winner) AS wins, COUNT(DISTINCT battle.loser) AS loses FROM player
-    INNER JOIN battle ON player.id_player = battle.winner OR player.id_player = battle.loser
-GROUP BY player.id_player
-HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
-
--- select the player if they have more wins than loses (using subqueries with the previous two queries)
-
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
 SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points
