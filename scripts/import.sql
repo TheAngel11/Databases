@@ -814,3 +814,17 @@ INSERT INTO frees (id_badge, id_player, id_sand, date) VALUES ('Played3Years', '
 
 -- insert into success manually
 INSERT INTO success (id_title, gems_reward) VALUES ('I like my friends', 190);
+
+-- insert more missions
+INSERT INTO mission (id_mission, title, task_description) VALUES (201, 'Armer One', 190);
+INSERT INTO mission (id_mission, title, task_description) VALUES (202, 'Armer Two', 220);
+INSERT INTO mission (id_mission, title, task_description) VALUES (203, 'Armer Three', 450);
+INSERT INTO mission (id_mission, title, task_description) VALUES (204, 'Armer Four', 720);
+
+SELECT id_mission FROM mission WHERE title LIKE 'Armer One' LIMIT 1;
+
+-- insert into accepts
+INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (201, '#Y08PCY8P2', 54000004, true);
+INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (202,'#2YCJRP9Q0', 54000004, true);
+INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (203,'#99QVP8J8Q', 54000011, true);
+INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (204,'#9CRJ0YUVL', 54000011, true);
