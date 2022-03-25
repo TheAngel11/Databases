@@ -7,7 +7,32 @@ SELECT DISTINCT max_trophies, min_trophies FROM sand
     INNER JOIN sand_pack sp on b.id_sand_pack = sp.id_sand_pack
     WHERE b.gold_contained > 8000 AND sand.title LIKE 'A%';
 
--- 2. TODO
+-- Validation
+SELECT * FROM belongs WHERE gold_contained > 8000;
+SELECT * FROM sand WHERE id = 54000013;
+SELECT DISTINCT max_trophies, min_trophies FROM sand
+    INNER JOIN belongs b on sand.id = b.id_sand
+    INNER JOIN sand_pack sp on b.id_sand_pack = sp.id_sand_pack
+    WHERE b.gold_contained > 8000 AND sand.title LIKE 'A%' AND sand.id = 54000013;
+
+
+-- 2. Llista de nom, data d'inici, data de finalització de les temporades i, de les batalles
+-- d'aquestes temporades, el nom del jugador guanyador si el jugador té més victòries que
+-- derrotes i la seva experiència és més gran de 200.000
+SELECT DISTINCT s.id_name AS season_name, s.start_date, s.end_date, p.name FROM battle
+    INNER JOIN takes_place tp on battle.id_battle = tp.id_battle
+    INNER JOIN season s on tp.id_season = s.id_name
+    INNER JOIN player p ON p.id_player = battle.winner OR p.id_player = battle.loser
+WHERE p.exp > 200000
+GROUP BY p.id_player, s.id_name, s.start_date, s.end_date;
+
+--select the players with their wins and loses
+SELECT player.id_player, COUNT(DISTINCT battle.winner) AS wins, COUNT(DISTINCT battle.loser) AS loses FROM player
+    INNER JOIN battle ON player.id_player = battle.winner OR player.id_player = battle.loser
+GROUP BY player.id_player
+HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
+
+-- select the player if they have more wins than loses (using subqueries with the previous two queries)
 
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
@@ -39,9 +64,9 @@ SELECT sand.title AS sand_title, player.name AS player_name, frees.id_badge AS b
     INNER JOIN player ON frees.id_player = player.id_player
     INNER JOIN card ON card.sand = sand.id
 WHERE player.exp > 290000 AND card.id_card_name IN
-    (SELECT id_card_name FROM card INNER JOIN sand s on card.sand = s.id WHERE s.title LIKE 'A%')
+    (SELECT id_card_name FROM card INNER JOIN sand s ON card.sand = s.id WHERE s.title LIKE 'A%') -- cartes obtingudes en arenes que comencen per A
 AND player.id_player IN
-    (SELECT DISTINCT id_player FROM player INNER JOIN owns ON player.id_player = owns.player WHERE owns.card LIKE 'Lava%');
+    (SELECT DISTINCT id_player FROM player INNER JOIN owns ON player.id_player = owns.player WHERE owns.card LIKE 'Lava%'); -- id's de jugadors que tenen cartes que comencen per Lava
 
 -- 6.Donar el nom de les missions que donen recompenses a totes les arenes el títol de les
 -- quals comença per "t" o acaba per "a". Ordena el resultat pel nom de la missió.
