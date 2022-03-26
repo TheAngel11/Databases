@@ -28,6 +28,18 @@ FROM role AS ro JOIN joins AS j ON j.id_role = ro.id_role
 WHERE j.id_clan LIKE '#L0QPV'
 AND ro.description LIKE 'elder%';
 
+-- 2.Mostrar el nom dels jugadors, el text dels missatges i la data dels missatges enviats pels jugadors
+-- que tenen la carta Skeleton Army i han comprat articles abans del 01-01-2019.
+SELECT p.name, m.issue AS message, m.datetime FROM player p INNER JOIN message m on p.id_player = m.id_owner
+WHERE p.id_player IN (
+    SELECT DISTINCT p.id_player FROM player p
+        INNER JOIN owns o ON p.id_player = o.player
+    WHERE o.card = 'Skeleton Army')
+AND p.id_player IN (SELECT p.id_player FROM player p
+    INNER JOIN pays pa ON p.id_player = pa.id_player
+    INNER JOIN article a on pa.id_article = a.id_article
+WHERE pa.datetime < '2019-01-01');
+
 -- 3) Llistar els 10 primers jugadors amb experiència superior a 100.000 que han creat més
 -- piles i han guanyat batalles a la temporada T7.
 SELECT p.id_player, p.name, p.exp, COUNT(s.id_stack) AS stacks_created
