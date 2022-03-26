@@ -40,6 +40,23 @@ AND p.id_player IN (SELECT p.id_player FROM player p
     INNER JOIN article a on pa.id_article = a.id_article
 WHERE pa.datetime < '2019-01-01');
 
+-- Validation
+SELECT p.id_player FROM player p
+    INNER JOIN pays pa ON p.id_player = pa.id_player
+    INNER JOIN article a on pa.id_article = a.id_article
+WHERE pa.datetime < '2019-01-01' AND p.id_player = '#99Q8CU';
+
+SELECT p.name, m.issue AS message, m.datetime FROM player p INNER JOIN message m on p.id_player = m.id_owner
+WHERE p.id_player IN (
+    SELECT DISTINCT p.id_player FROM player p
+        INNER JOIN owns o ON p.id_player = o.player
+    WHERE o.card = 'Skeleton Army')
+AND p.id_player IN (SELECT p.id_player FROM player p
+    INNER JOIN pays pa ON p.id_player = pa.id_player
+    INNER JOIN article a on pa.id_article = a.id_article
+WHERE pa.datetime < '2019-01-01')
+AND id_player = '#99Q8CU';
+
 -- 3) Llistar els 10 primers jugadors amb experiència superior a 100.000 que han creat més
 -- piles i han guanyat batalles a la temporada T7.
 SELECT p.id_player, p.name, p.exp, COUNT(s.id_stack) AS stacks_created
@@ -57,6 +74,32 @@ AND p.id_player IN
 GROUP BY p.id_player, p.name, p.exp
 ORDER BY stacks_created DESC
 LIMIT 10;
+
+SELECT * FROM battle INNER JOIN takes_place tp on battle.id_battle = tp.id_battle
+WHERE id_season LIKE 'T7';
+
+SELECT * FROM player WHERE id_player = '#GQVLJ2U9';
+
+SELECT p.id_player, p.name, p.exp, COUNT(s.id_stack) AS stacks_created
+FROM player AS p INNER JOIN stack AS s ON p.id_player = s.id_player
+WHERE p.id_player = '#GQVLJ2U9'
+GROUP BY p.id_player, p.name, p.exp
+ORDER BY stacks_created DESC;
+
+SELECT p.id_player, p.name, p.exp, COUNT(s.id_stack) AS stacks_created
+FROM player AS p INNER JOIN stack AS s ON p.id_player = s.id_player
+WHERE p.exp > 100000
+AND p.id_player IN
+    (
+    SELECT winner FROM takes_place AS tp
+        INNER JOIN battle AS b ON tp.id_battle = b.id_battle
+        INNER JOIN player AS p ON p.id_player = b.winner
+    WHERE id_season LIKE 'T7'
+    GROUP BY winner
+    ORDER BY COUNT(*) DESC
+    )
+GROUP BY p.id_player, p.name, p.exp
+ORDER BY stacks_created DESC;
 
 --Creuada 5: Mostrar la identificació de les batalles, la durada, la data d'inici i la data
 --de finalització dels clans que la seva descripció no contingui el text "Chuck Norris".
@@ -196,7 +239,7 @@ ORDER BY player.name;
 
 -- Validation
 SELECT * FROM pays WHERE id_player = '#LYG9QGGQ'; -- 0 results
-SELECT * FROM message WHERE id_owner = '#9UUC9L280'; -- 0 results
+SELECT * FROM message WHERE id_owner = '#J9LRGUJ2'; -- 0 results
 
 -- 10.Llistar les cartes comunes que no estan incloses en cap pila i que pertanyen a jugadors
 -- amb experiència superior a 200.000. Ordena la sortida amb el nom de la carta.
