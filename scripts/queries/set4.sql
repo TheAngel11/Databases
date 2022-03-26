@@ -27,6 +27,25 @@ WHERE p.exp > 200000
 GROUP BY p.name, s.id_name, s.start_date, s.end_date
 HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
 
+-- Validation
+SELECT s.id_name, player.id_player FROM player
+INNER JOIN battle ON player.id_player = battle.winner OR player.id_player = battle.loser
+INNER JOIN takes_place t on battle.id_battle = t.id_battle
+INNER JOIN season s on t.id_season = s.id_name
+GROUP BY player.id_player, s.id_name
+HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
+
+SELECT * FROM player WHERE id_player = '#209GRYYL0';
+
+SELECT DISTINCT s.id_name AS season_name, s.start_date, s.end_date, p.name AS player FROM battle
+    INNER JOIN takes_place tp on battle.id_battle = tp.id_battle
+    INNER JOIN season s on tp.id_season = s.id_name
+    INNER JOIN player p ON p.id_player = battle.winner OR p.id_player = battle.loser
+WHERE p.exp > 200000
+AND id_player = '#209GRYYL0'
+GROUP BY p.name, s.id_name, s.start_date, s.end_date
+HAVING COUNT(DISTINCT battle.winner) > COUNT(DISTINCT battle.loser);
+
 -- 3. Llistar la puntuació total dels jugadors guanyadors de batalles de cada temporada. Filtrar
 -- la sortida per considerar només les temporades que han començat i acabat el 2019
 SELECT season.id_name, player.id_player, player.name, SUM(battle.points) AS total_points
@@ -66,13 +85,54 @@ AND player.id_player IN
 SELECT DISTINCT m.title FROM sand
     INNER JOIN accepts a ON sand.id = a.id_sand
     INNER JOIN mission m ON a.id_mission = m.id_mission
-WHERE sand.title LIKE 't%' OR sand.title LIKE '%a'
+WHERE m.title LIKE 'T%' OR m.title LIKE 'a%'
 ORDER BY m.title;
+
+-- Validation
+
+SELECT * FROM mission WHERE title = 'Talbot';
+
+SELECT mission.title, mission.id_mission, accepts.id_sand, sand.title FROM mission
+    INNER JOIN accepts ON mission.id_mission = accepts.id_mission
+    INNER JOIN sand ON accepts.id_sand = sand.id
+WHERE mission.title = 'Talbot' AND sand.title LIKE 'T%';
 
 -- 7. Donar el nom de les arenes amb jugadors que al novembre o desembre de 2021 van
 -- obtenir insígnies si el nom de l’arena conté la paraula "Lliga", i les arenes tenen jugadors
 -- que al 2021 van obtenir èxits el nom dels quals conté la paraula "Friend".
 SELECT * FROM sand WHERE sand.id IN (
+    SELECT s.id FROM sand s INNER JOIN frees f on s.id = f.id_sand
+    WHERE date > TO_DATE('30/09/2021', 'DD/MM/YYYY')
+      AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+        AND s.title LIKE '%Lliga%') AND sand.id IN (
+            SELECT DISTINCT id_sand FROM frees f
+                INNER JOIN sand s ON f.id_sand = s.id
+            WHERE f.id_player IN (
+                SELECT player.id_player
+                FROM player
+                    INNER JOIN obtains o on player.id_player = o.id_player
+                WHERE date > TO_DATE('31/12/2020', 'DD/MM/YYYY')
+                    AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+                AND o.id_success LIKE '%Friend%'
+        ));
+
+-- Validation
+SELECT * FROM sand s INNER JOIN frees f on s.id = f.id_sand
+    WHERE date > TO_DATE('30/09/2021', 'DD/MM/YYYY')
+      AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+        AND s.title LIKE '%Lliga%';
+
+SELECT DISTINCT * FROM frees f
+                INNER JOIN sand s ON f.id_sand = s.id
+            WHERE f.id_player IN ( -- jugadors que van obtenir exists al 2021
+                SELECT player.id_player
+                FROM player
+                    INNER JOIN obtains o on player.id_player = o.id_player
+                WHERE date > TO_DATE('31/12/2020', 'DD/MM/YYYY')
+                    AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
+                AND o.id_success LIKE '%Friend%');
+
+SELECT * FROM sand WHERE sand.id = 54000059 AND sand.id IN (
     SELECT s.id FROM sand s INNER JOIN frees f on s.id = f.id_sand
     WHERE date > TO_DATE('30/09/2021', 'DD/MM/YYYY')
       AND date < TO_DATE('01/01/2022', 'DD/MM/YYYY')
@@ -102,3 +162,21 @@ WHERE id_player IN (
 WHERE s.reward_in_gold > (SELECT AVG(sand.reward_in_gold) FROM sand)
 AND m.title LIKE '%Armer%'
     );
+
+
+SELECT * FROM mission WHERE title LIKE '%Armer%';
+SELECT * FROM player p INNER JOIN accepts a on p.id_player = a.id_player WHERE a.id_mission = 201;
+SELECT AVG(sand.reward_in_gold) FROM sand;
+
+SELECT DISTINCT c.id_card_name, o.player FROM card c
+    INNER JOIN owns o on c.id_card_name = o.card
+    INNER JOIN player p on o.player = p.id_player
+WHERE id_player IN (
+    SELECT a.id_player FROM player p
+    INNER JOIN accepts a on p.id_player = a.id_player
+    INNER JOIN mission m ON a.id_mission = m.id_mission
+    INNER JOIN sand s ON s.id = a.id_sand
+WHERE s.reward_in_gold > (SELECT AVG(sand.reward_in_gold) FROM sand)
+AND m.title LIKE '%Armer%'
+    )
+AND id_player = '#Y08PCY8P2';
