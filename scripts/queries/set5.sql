@@ -181,6 +181,23 @@ JOIN player AS p ON p.id_player = s.id_player
 WHERE s.name LIKE '%Madrid%' AND p.exp > 150000
 ORDER BY p.exp ASC;
 
+-- 9) Enumerar el nom, l’experiència i el nombre de trofeus dels jugadors que no han comprat res. Així, el nom,
+-- l'experiència i el número de trofeus dels jugadors que no han enviat cap missatge.
+-- Ordenar la sortida de menor a més valor en el nom del jugador.
+SELECT player.name, player.exp, player.trophies FROM player WHERE id_player IN (
+    SELECT player.id_player FROM player
+        FULL JOIN pays ON player.id_player = pays.id_player
+    WHERE pays.id_player IS NULL)
+OR player.id_player IN (
+    SELECT player.id_player FROM player
+        FULL JOIN message ON player.id_player = message.id_owner
+    WHERE message.id_owner IS NULL)
+ORDER BY player.name;
+
+-- Validation
+SELECT * FROM pays WHERE id_player = '#LYG9QGGQ'; -- 0 results
+SELECT * FROM message WHERE id_owner = '#9UUC9L280'; -- 0 results
+
 -- 10.Llistar les cartes comunes que no estan incloses en cap pila i que pertanyen a jugadors
 -- amb experiència superior a 200.000. Ordena la sortida amb el nom de la carta.
 /*Consulta*/
