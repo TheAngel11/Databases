@@ -101,6 +101,32 @@ AND p.id_player IN
 GROUP BY p.id_player, p.name, p.exp
 ORDER BY stacks_created DESC;
 
+-- Creuada 4: Enumera els articles que han estat comprats més vegades i el seu cost total.
+SELECT article.name, COUNT(pays.id_article) AS times_bought, SUM(article.real_price) – SUM(pays.discount) AS price
+    FROM article
+    JOIN pays ON article.id_article = pays.id_article
+    GROUP BY article.id_article
+    HAVING COUNT(pays.id_article) >=
+    (SELECT COUNT(pays.id_article) AS times_bought
+        FROM pays
+        GROUP BY pays.id_article
+        ORDER BY times_bought DESC
+        LIMIT 1)
+    ORDER BY price DESC;
+
+    -- Validació
+    -- Nombre de vegades
+SELECT *
+    FROM pays
+    JOIN article ON article.id_article = pays.id_article
+    WHERE article.name = 'Spearleaf Stonecrop';
+
+    -- Preu total
+SELECT SUM(article.real_price) - SUM(pays.discount) 
+    FROM pays
+    JOIN article ON article.id_article = pays.id_article
+    WHERE article.name = 'Spearleaf Stonecrop';
+    
 --Creuada 5: Mostrar la identificació de les batalles, la durada, la data d'inici i la data
 --de finalització dels clans que la seva descripció no contingui el text "Chuck Norris".
 --Considera només les batalles amb una durada inferior a la durada mitjana de totes les batalles.
@@ -269,3 +295,82 @@ VALUES ('carta_validacio', 190, 55, 'Common', 54000048);
 
 INSERT INTO owns (card, level, player, date_found, date_level_up, experience_gained)
 VALUES ('carta_validacio', 2,'#8C8QJR9JG', '2022-03-03', '2022-03-04', 4000);
+
+-- 11. Llistar el nom dels jugadors que han sol·licitat amics, però no han estat
+-- sol·licitats com a amics.
+SELECT DISTINCT id_player1
+    FROM friend
+    WHERE id_player1 NOT IN
+    (SELECT DISTINCT id_player2
+        FROM friend);
+
+    -- Validació
+SELECT *
+    FROM friend
+    WHERE id_player2 = '8QPYVCL';
+
+-- 12. Enumerar el nom dels jugadors i el nombre d'articles comprats que tenen un cost
+-- superior al cost mitjà de tots els articles. Ordenar el resultat de menor a major valor
+-- del nombre de comandes.
+SELECT player.name, COUNT(pays.id_article) AS order_num
+	FROM pays
+	JOIN article ON article.id_article = pays.id_article
+	JOIN player ON player.id_player = pays.id_player
+	WHERE article.real_price >=
+	(SELECT AVG(real_price)
+		FROM article)
+	GROUP BY player.name
+	ORDER BY order_num ASC;
+
+    -- Validació
+    -- Articles amb preu superior al mitjà
+SELECT *
+    FROM article
+    WHERE real_price >=
+    (SELECT AVG(real_price)
+        FROM article);
+
+    -- Compres d'usuari
+SELECT *
+    FROM pays
+    JOIN player ON player.id_player = pays.id_player
+    WHERE player.name = 'rogerelangelito';
+
+    -- Compres fora de restricció d'articles
+SELECT *
+    FROM pays
+    JOIN player ON player.id_player = pays.id_player
+    WHERE player.name = 'rogerelangelito'
+    AND pays.id_article NOT IN
+    (SELECT id_article
+        FROM article
+        WHERE article.real_price >=
+        (SELECT AVG(real_price)
+            FROM article));
+
+-- 13. Poseu a zero els valors d'or i gemmes als jugadors que no han enviat cap 
+-- missatge o que han enviat el mateix nombre de missatges que el jugador que més 
+-- missatges ha enviat.
+UPDATE player
+SET gold = 0, gems = 0
+WHERE id_player IN
+	(SELECT message.id_owner
+		FROM message
+		GROUP BY message.id_owner
+		HAVING COUNT(message.id_owner) =
+		(SELECT COUNT(message.id_owner) AS times
+			FROM message
+			GROUP BY message.id_owner
+			ORDER BY times DESC
+			LIMIT 1))
+OR id_player IN
+	(SELECT id_player IN
+		FROM player
+		LEFT JOIN message ON message.id_owner = player.id_player
+		WHERE message.id_owner IS NULL);
+
+    -- Comprovació
+SELECT id_player, gold, gems 
+    FROM player
+    WHERE id_player = '#22UCVR0CL'
+    OR id_player = '#PJUJCVUR';
