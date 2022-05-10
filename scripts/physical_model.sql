@@ -1,3 +1,19 @@
+-- Create table Warnings -> Warnings(affected_table, error_message, date, user)
+DROP TABLE IF EXISTS Warnings CASCADE;
+CREATE TABLE Warnings (
+	affected_table VARCHAR(255),
+	error_message VARCHAR(255),
+	date DATE,
+	"user" VARCHAR(255)
+);
+
+-- Create table OpCardBlackList -> OpCardBlackList(card, date)
+DROP TABLE IF EXISTS OpCardBlackList CASCADE;
+CREATE TABLE OpCardBlackList (
+	card VARCHAR(255) PRIMARY KEY,
+	date DATE
+);
+
 -- Create table player -> player(id_player(PK), name, exp, trophies, gold, gems)
 DROP TABLE IF EXISTS player CASCADE;
 CREATE TABLE player (

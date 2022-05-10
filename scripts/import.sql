@@ -395,6 +395,12 @@ FROM '/Users/Shared/BBDD/is_found.csv'
 DELIMITER ','
 CSV HEADER;
 
+DROP TABLE IF EXISTS id_card_aux;
+CREATE TABLE id_card_aux(
+	id INTEGER PRIMARY KEY,
+	name VARCHAR(100)
+);
+
 -- DELETE PART 
 DELETE FROM pays;
 DELETE FROM buys;
@@ -591,10 +597,15 @@ INSERT INTO owns(card, level, player, date_level_up, date_found, experience_gain
 SELECT pc.name, pc.level, pc.player, now() , pc.date, random() * (10000 - 25 + 1) + 25 
 FROM player_card_aux AS pc JOIN card AS ca ON pc.name = ca.id_card_name;
 
+-- ID CARD AUX (aux table that assigns a card with his id)
+INSERT INTO id_card_aux(id, name)
+SELECT DISTINCT pc.id, pc.name FROM player_card_aux AS pc;
 
 --GROUP
 INSERT INTO "group"(card_name, id_stack)
-SELECT DISTINCT c.name, NULLIF(deck, '')::int FROM player_deck_aux, card_aux AS c;
+SELECT DISTINCT ic.name, (pd.deck)::int FROM player_deck_aux AS pd
+JOIN id_card_aux AS ic ON ic.id = pd.card
+JOIN card AS c ON c.id_card_name = ic.name;
 
 -- Clan
 INSERT INTO clan (id_clan, clan_name, description, num_min_trophy, total_points, num_trophy, id_player,gold_needed, datetime)
