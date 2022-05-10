@@ -1,4 +1,3 @@
--- 1) Les cartes són la guerra, disfressada d'esport
 -- TRIGGERS CARTA --
 --1.1) Proporcions de rareses 
 --Stored procedure
@@ -199,13 +198,12 @@ BEGIN
 				JOIN stack AS s ON s.id_player = p.id_player
 				WHERE p.id_player = NEW.winner
 				ORDER BY s.id_stack
-				LIMIT 1)))) > 49;
+				LIMIT 1)))) > 90;
 		
 		-- There is a card with more than 90% winrate
 		IF ((SELECT COUNT(cw.card)FROM cards_winners AS cw) <> 0) THEN
 
 			--The card has been inside the OpCardBlackList for 7 or more days
-				
 			UPDATE card SET damage = ((damage * 99)/100), attack_speed = ((attack_speed * 99)/100)
 			WHERE id_card_name IN (
 				SELECT cw.card FROM OpCardBlackList AS op 
@@ -232,7 +230,7 @@ BEGIN
 				
 			--The card it's not inside the OpCardBlackList
 			INSERT INTO OpCardBlackList 
-			SELECT cw.card, (SELECT CAST(CURRENT_DATE - CAST('7 days' AS INTERVAL) AS DATE)) 
+			SELECT cw.card, CURRENT_DATE 
 			FROM cards_winners AS cw
 			WHERE cw.card NOT IN(SELECT op.card FROM OpCardBlackList AS op);
 			
