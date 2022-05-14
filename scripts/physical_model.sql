@@ -362,7 +362,7 @@ CREATE TABLE give (
     id_clan VARCHAR(100) NOT NULL,
     id_player VARCHAR(100) NOT NULL,
     date TIMESTAMP NOT NULL,
-    gold INTEGER NOT NULL,
+    gold INTEGER,
     experience INTEGER NOT NULL,
     FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
     FOREIGN KEY (id_player) REFERENCES player (id_player),
