@@ -550,3 +550,19 @@ CREATE TABLE possesses (
 	FOREIGN KEY (id_player) REFERENCES player(id_player),
 	PRIMARY KEY (card_number, id_player)
 );
+
+DROP TABLE IF EXISTS offense CASCADE;
+CREATE TABLE offense (
+    message VARCHAR(100) NOT NULL,
+    PRIMARY KEY (message)
+);
+
+DROP TABLE IF EXISTS MessageWarnings CASCADE;
+CREATE TABLE MessageWarnings (
+    id_message INTEGER NOT NULL,
+    id_player VARCHAR(255) NOT NULL,
+    datetime TIMESTAMP NOT NULL,
+    warning VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id_message) REFERENCES message (id_message),
+    PRIMARY KEY (id_message)
+);
