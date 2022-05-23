@@ -566,3 +566,11 @@ CREATE TABLE MessageWarnings (
     FOREIGN KEY (id_message) REFERENCES message (id_message),
     PRIMARY KEY (id_message)
 );
+
+DROP TABLE IF EXISTS debugSand;
+CREATE TABLE debugSand (
+	id INTEGER NOT NULL,
+	FOREIGN KEY (id) REFERENCES sand(id),
+	PRIMARY KEY (id)
+);
+

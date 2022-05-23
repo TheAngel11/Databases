@@ -837,3 +837,13 @@ INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (201, 
 INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (202,'#2YCJRP9Q0', 54000004, true);
 INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (203,'#99QVP8J8Q', 54000011, true);
 INSERT INTO accepts (id_mission, id_player, id_sand, is_completed) VALUES (204,'#9CRJ0YUVL', 54000011, true);
+
+-- debugSand
+INSERT INTO debugSand(id)
+SELECT id FROM sand
+WHERE max_trophies = 32767
+AND title NOT LIKE 'Arena_L10 - Ultimate Champion';
+
+INSERT INTO debugSand(id)
+SELECT id FROM sand
+WHERE title LIKE 'Lliga Legendaria';

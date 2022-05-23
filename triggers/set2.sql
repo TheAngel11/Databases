@@ -3,8 +3,39 @@
 -- 2.1) Procés de compra
 
 -- FUNCTION --
+DROP TRIGGER IF EXISTS buy_process ON pays CASCADE;
+DROP FUNCTION IF EXISTS buy_process();
+CREATE FUNCTION buy_process()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF (NEW.id_article IN (SELECT id_bundle FROM bundle)) THEN
+		UPDATE player
+		SET gold = gold + (SELECT gold_contained FROM bundle WHERE id_bundle = NEW.id_article),
+		gems = gems + (SELECT gems_contained FROM bundle WHERE id_bundle = NEW.id_article)
+		WHERE player.id_player = NEW.id_player;
+	END IF;
+	IF (NEW.id_article IN (SELECT id_sand_pack FROM sand_pack)) THEN
+		UPDATE player
+		SET gold = gold + (SELECT gold_contained FROM belongs 
+						   WHERE id_sand_pack = NEW.id_article
+	  					   AND id_sand = (
+						   SELECT id FROM sand 
+						   WHERE max_trophies > (SELECT trophies FROM player WHERE id_player = '#ARNAU')
+	  					   AND min_trophies <= (SELECT trophies FROM player WHERE id_player = '#ARNAU')
+						   AND id NOT IN (SELECT id FROM debugSand)
+						   AND id IN (SELECT id_sand FROM belongs WHERE id_sand_pack = NEW.id_article)))
+		WHERE player.id_player = NEW.id_player;
+	END IF;
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 -- TRIGGER --
+CREATE OR REPLACE TRIGGER buy_process
+AFTER INSERT ON pays
+FOR EACH ROW
+EXECUTE FUNCTION buy_process();
+
 
 -- VALIDATION --
 
@@ -91,7 +122,27 @@ DELETE FROM player WHERE id_owner = '#ARNAU';
 -- 2.3) Final de temporada
 
 -- FUNCTION --
+DROP TRIGGER IF EXISTS season_end ON season CASCADE;
+DROP FUNCTION IF EXISTS season_end();
+CREATE FUNCTION season_end()
+RETURNS TRIGGER AS $$
+BEGIN
+	INSERT INTO Ranquing
+	SELECT season.id_name, player.id_player, sand.id, player.trophies
+	FROM player, sand, season
+	WHERE sand.max_trophies > player.trophies
+	AND sand.min_trophies <= player.trophies
+	AND sand.id NOT IN (SELECT id FROM DebugSand)
+	AND season.id_name =
+	(SELECT season.id_name FROM season WHERE season.end_date =
+	(SELECT MAX(end_date) FROM season));
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 -- TRIGGER --
+CREATE OR REPLACE TRIGGER season_end
+BEFORE INSERT ON season
+EXECUTE FUNCTION season_end();
 
 -- VALIDATION --
