@@ -574,3 +574,15 @@ CREATE TABLE debugSand (
 	PRIMARY KEY (id)
 );
 
+DROP TABLE IF EXISTS Ranquing;
+CREATE TABLE Ranquing (
+    season_id VARCHAR(100) NOT NULL,
+    user_id VARCHAR(100) NOT NULL,
+    arena_id INTEGER NOT NULL,
+    trophies INTEGER NOT NULL,
+    FOREIGN KEY(season_id) REFERENCES season(id_name),
+    FOREIGN KEY(user_id) REFERENCES player(id_player),
+    FOREIGN KEY(arena_id) REFERENCES sand(id),
+    PRIMARY KEY(season_id, user_id, arena_id)
+);
+

@@ -8,21 +8,26 @@ DROP FUNCTION IF EXISTS buy_process();
 CREATE FUNCTION buy_process()
 RETURNS TRIGGER AS $$
 BEGIN
+	--Bundle case
 	IF (NEW.id_article IN (SELECT id_bundle FROM bundle)) THEN
 		UPDATE player
 		SET gold = gold + (SELECT gold_contained FROM bundle WHERE id_bundle = NEW.id_article),
 		gems = gems + (SELECT gems_contained FROM bundle WHERE id_bundle = NEW.id_article)
 		WHERE player.id_player = NEW.id_player;
 	END IF;
+	-- Sand pack case
 	IF (NEW.id_article IN (SELECT id_sand_pack FROM sand_pack)) THEN
 		UPDATE player
 		SET gold = gold + (SELECT gold_contained FROM belongs 
 						   WHERE id_sand_pack = NEW.id_article
 	  					   AND id_sand = (
 						   SELECT id FROM sand 
-						   WHERE max_trophies > (SELECT trophies FROM player WHERE id_player = '#ARNAU')
-	  					   AND min_trophies <= (SELECT trophies FROM player WHERE id_player = '#ARNAU')
+						   -- Inside trophies range
+						   WHERE max_trophies > (SELECT trophies FROM player WHERE id_player = NEW.id_player)
+	  					   AND min_trophies <= (SELECT trophies FROM player WHERE id_player = NEW.id_player)
+						   -- Not a debug sand
 						   AND id NOT IN (SELECT id FROM debugSand)
+						   -- Possible sand pack sand?
 						   AND id IN (SELECT id_sand FROM belongs WHERE id_sand_pack = NEW.id_article)))
 		WHERE player.id_player = NEW.id_player;
 	END IF;
@@ -38,6 +43,53 @@ EXECUTE FUNCTION buy_process();
 
 
 -- VALIDATION --
+-- 1. BUNDLE
+	-- 1.1. Creating user for validation
+INSERT INTO credit_card VALUES(696969696969696);
+INSERT INTO player VALUES('#ARNAU', 'Arnau', 0, 0, 0, 0);
+INSERT INTO possesses VALUES(696969696969696, '#ARNAU');
+
+	-- 1.2. Looking for a buyable bundle
+SELECT * FROM pays WHERE id_article IN (SELECT id_bundle FROM bundle);
+
+	-- 1.3. Getting information about bundle with ID = 125
+SELECT * FROM bundle WHERE id_bundle = 125;
+
+	-- 1.4. Buy execution
+INSERT INTO pays VALUES('#ARNAU', 696969696969696, 125, '2022-02-22 00:00:00', 0);
+
+	-- 1.5. Gold and gems checking
+SELECT * FROM player WHERE id_player = '#ARNAU';
+
+	-- 1.6 Player reset
+UPDATE player SET gold = 0, gems = 0 WHERE id_player = '#ARNAU';
+
+-- 2. SAND PACK
+	-- 2.1 Looking for a buyable sand pack
+SELECT * FROM pays WHERE id_article IN (SELECT id_sand_pack FROM sand_pack);
+
+	-- 2.2 Getting information about sand pack with ID = 5
+SELECT * FROM belongs WHERE id_sand_pack = 5 AND id_sand NOT IN (SELECT id FROM debugSand);
+
+	-- 2.3 Checking trophies for sand ID = 54000013
+SELECT * FROM sand WHERE id = 54000013;
+
+	-- 2.4 Player set up to fit arena analysed
+UPDATE player SET trophies = 5500 WHERE id_player = '#ARNAU';
+
+	-- 2.5 Buy execution
+INSERT INTO pays VALUES('#ARNAU', 696969696969696, 5, '2022-02-22 00:00:00', 0);
+
+	-- 2.6 Checking our player's gold
+SELECT * FROM player WHERE id_player = '#ARNAU';
+
+	-- 2.7 Deleting introduced data
+DELETE FROM pays WHERE id_player = '#ARNAU';
+DELETE FROM possesses WHERE card_number = 696969696969696;
+DELETE FROM credit_card WHERE number = 696969696969696;
+DELETE FROM player WHERE id_player = '#ARNAU';	
+
+-------------------------------- END 2.1 -------------------------------------------------
 
 -- 2.2) Jugadors prohibits
 
@@ -118,6 +170,7 @@ DELETE FROM MessageWarnings WHERE id_player = '#ARNAU';
 DELETE FROM message WHERE id_owner = '#ARNAU';
 DELETE FROM player WHERE id_owner = '#ARNAU';
 
+-------------------------------- END 2.2 -------------------------------------------------
 
 -- 2.3) Final de temporada
 
@@ -130,10 +183,13 @@ BEGIN
 	INSERT INTO Ranquing
 	SELECT season.id_name, player.id_player, sand.id, player.trophies
 	FROM player, sand, season
+	-- Looking for player corresponding sand
 	WHERE sand.max_trophies > player.trophies
 	AND sand.min_trophies <= player.trophies
+	-- Avoiding debug sands
 	AND sand.id NOT IN (SELECT id FROM DebugSand)
 	AND season.id_name =
+	-- Last season search
 	(SELECT season.id_name FROM season WHERE season.end_date =
 	(SELECT MAX(end_date) FROM season));
 RETURN NULL;
@@ -146,3 +202,24 @@ BEFORE INSERT ON season
 EXECUTE FUNCTION season_end();
 
 -- VALIDATION --
+	-- 1. Creating validation player
+INSERT INTO player VALUES('#ARNAU', 'ARNAU', 0, 2750, 0, 0);
+
+	-- 2. Looking for arena associated to 2750 trophies
+SELECT * FROM sand WHERE sand.id NOT IN (SELECT id FROM debugSand);
+
+	-- 3. New season start
+INSERT INTO season SELECT 'T11', CURRENT_DATE, '2022-12-31';
+
+	-- 4. Trigger effect checking
+SELECT * FROM Ranquing WHERE user_id = '#ARNAU';
+
+	-- 5. Arena reviewing
+SELECT * FROM sand WHERE id = 54000010;
+
+	-- 6. Deleting inserted data
+DELETE FROM Ranquing;
+DELETE FROM season WHERE id_name = 'T11';
+DELETE FROM player WHERE id_player = '#ARNAU';
+
+-------------------------------- END 2.3 -------------------------------------------------
