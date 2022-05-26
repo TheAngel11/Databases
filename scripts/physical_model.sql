@@ -230,7 +230,8 @@ CREATE TABLE battle (
     loser VARCHAR(100) NOT NULL,
     datetime DATE NOT NULL,
     duration TIME NOT NULL,
-    points INTEGER NOT NULL,
+    points_winner INTEGER NOT NULL,
+	points_loser INTEGER NOT NULL,
     trophies_played INTEGER NOT NULL,
     gold_played INTEGER NOT NULL,
 	clan_battle INTEGER,
@@ -238,7 +239,6 @@ CREATE TABLE battle (
     FOREIGN KEY (winner) REFERENCES player (id_player),
     FOREIGN KEY (loser) REFERENCES player (id_player)
 );
-
 -- create table complete -> compete(id_battle(PK/FK), id_player(PK/FK), id_sand(PK/FK), victories_count, defeat_count, points_count, season(FK))
 DROP TABLE IF EXISTS takes_place CASCADE;
 CREATE TABLE takes_place (
@@ -584,5 +584,32 @@ CREATE TABLE Ranquing (
     FOREIGN KEY(user_id) REFERENCES player(id_player),
     FOREIGN KEY(arena_id) REFERENCES sand(id),
     PRIMARY KEY(season_id, user_id, arena_id)
+);
+
+--Taules auxiliars
+DROP TABLE IF EXISTS historic_leader CASCADE;
+CREATE TABLE historic_leader (
+    id_leader VARCHAR(100) NOT NULL,
+	id_clan VARCHAR(100) NOT NULL,
+	id_role INTEGER NOT NULL,
+	start_date TIMESTAMP NOT NULL,
+	FOREIGN KEY (id_leader) REFERENCES player (id_player),
+	FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
+	FOREIGN KEY (id_role) REFERENCES role (id_role),
+	PRIMARY KEY (id_leader, id_clan, start_date)
+);
+
+DROP TABLE IF EXISTS historic_delete_players CASCADE;
+CREATE TABLE historic_delete_players (
+    id_leader VARCHAR(100) NOT NULL,
+    id_player VARCHAR(100) NOT NULL,
+	id_clan VARCHAR(100) NOT NULL,
+	player_role INTEGER, 
+    datetime TIMESTAMP NOT NULL,
+	FOREIGN KEY (id_leader) REFERENCES player (id_player),
+	FOREIGN KEY (id_player) REFERENCES player (id_player),
+	FOREIGN KEY (id_clan) REFERENCES clan (id_clan),
+    FOREIGN KEY (player_role) REFERENCES role (id_role),
+    PRIMARY KEY (id_leader, id_player,id_clan, datetime)
 );
 
