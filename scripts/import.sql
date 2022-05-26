@@ -535,10 +535,11 @@ FROM clan_battle_aux AS cb;
    We need to fill this table with the winner and the loser with the player ids. So the result may be:
  */
 -- UPDATE battle SET winner = (SELECT player FROM player_deck_aux WHERE deck = winner), loser = (SELECT player FROM player_deck_aux WHERE deck = loser);
-INSERT INTO battle (datetime, duration, points, trophies_played, gold_played, winner, loser, clan_battle)
+INSERT INTO battle (datetime, duration, points_winner, points_loser, trophies_played, gold_played, winner, loser, clan_battle)
 SELECT DISTINCT battle_aux.date,
                 battle_aux.duration,
-                floor(random() * 2000 + 1)::int,
+		battle_aux.winner_score,
+		battle_aux.loser_score,
                 floor(random() * 2000 + 1)::int,
                 floor(random() * 2000 + 1)::int,
                 (SELECT player FROM player_deck_aux WHERE deck = winner LIMIT 1),
@@ -570,9 +571,9 @@ SELECT name, lifetime FROM card_aux AS card
 WHERE card.lifetime IS NOT NULL;
 
 -- TROOP
-    INSERT INTO troop (troop_name, spawn_damage)
-    SELECT name, spawn_damage FROM card_aux AS card
-    WHERE card.spawn_damage IS NOT NULL;
+INSERT INTO troop (troop_name, spawn_damage)
+SELECT name, spawn_damage FROM card_aux AS card
+WHERE card.spawn_damage IS NOT NULL;
 
 -- ENCHANTMENT
 INSERT INTO enchantment (enchantment_name, effect_radius)
@@ -618,6 +619,9 @@ WHERE pc."role" LIKE 'leader:%';
 -- ID de SERIAL
 INSERT INTO role(description)
 SELECT DISTINCT "role" FROM player_clan_aux;
+
+INSERT INTO role(id_role, description)
+VALUES(0,'null');
 
 -- Join
 INSERT INTO joins(id_clan, id_player, id_role, datetime_in)
